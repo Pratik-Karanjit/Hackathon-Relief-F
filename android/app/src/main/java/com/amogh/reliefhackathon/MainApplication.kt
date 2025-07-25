@@ -1,4 +1,4 @@
-package com.anonymous.MyExpoApp
+package com.amogh.reliefhackathon
 
 import android.app.Application
 import android.content.res.Configuration

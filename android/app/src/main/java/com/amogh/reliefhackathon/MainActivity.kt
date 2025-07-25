@@ -1,4 +1,4 @@
-package com.anonymous.MyExpoApp
+package com.amogh.reliefhackathon
 
 import android.os.Build
 import android.os.Bundle
