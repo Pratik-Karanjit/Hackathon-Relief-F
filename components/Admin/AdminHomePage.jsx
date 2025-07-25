@@ -103,62 +103,66 @@ export default function AdminHomePage({ navigation }) {
         </View>
       </View>
 
-      {cardData.map((item) => (
-        <TouchableOpacity
-          key={item.id}
-          onPress={() => navigation.navigate("ReportDetail", { report: item })}
-        >
-          <View
+      <View style={styles.contentContainer}>
+        {cardData.map((item) => (
+          <TouchableOpacity
             key={item.id}
-            style={[
-              styles.contentCard,
-              item.flagCount > 5 && styles.flaggedCard,
-            ]}
+            onPress={() =>
+              navigation.navigate("ReportDetail", { report: item })
+            }
           >
-            <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              <Text style={styles.cardTime}>{item.time}</Text>
-            </View>
-
-            <View style={styles.locationRow}>
-              <View style={styles.locationContainer}>
-                <Ionicons
-                  name="location-outline"
-                  size={16}
-                  color="#666"
-                  style={styles.locationIcon}
-                />
-                <Text style={styles.locationText}>{item.location}</Text>
+            <View
+              key={item.id}
+              style={[
+                styles.contentCard,
+                item.flagCount > 5 && styles.flaggedCard,
+              ]}
+            >
+              <View style={styles.cardHeader}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardTime}>{item.time}</Text>
               </View>
-              <View
-                style={[
-                  styles.urgencyBadge,
-                  { backgroundColor: getUrgencyColor(item.urgency) },
-                ]}
-              >
-                <Text style={styles.urgencyText}>
-                  {item.urgency.toUpperCase()}
+
+              <View style={styles.locationRow}>
+                <View style={styles.locationContainer}>
+                  <Ionicons
+                    name="location-outline"
+                    size={16}
+                    color="#666"
+                    style={styles.locationIcon}
+                  />
+                  <Text style={styles.locationText}>{item.location}</Text>
+                </View>
+                <View
+                  style={[
+                    styles.urgencyBadge,
+                    { backgroundColor: getUrgencyColor(item.urgency) },
+                  ]}
+                >
+                  <Text style={styles.urgencyText}>
+                    {item.urgency.toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={styles.cardContent}>{item.description}</Text>
+
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="flag"
+                  size={16}
+                  color="#dc3545"
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={styles.flagText}>
+                  {item.flagCount} flag{item.flagCount !== 1 ? "s" : ""}
+                  {item.flagCount > 5 ? " — marked as suspicious" : ""}
                 </Text>
               </View>
             </View>
-
-            <Text style={styles.cardContent}>{item.description}</Text>
-
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Ionicons
-                name="flag"
-                size={16}
-                color="#dc3545"
-                style={{ marginRight: 4 }}
-              />
-              <Text style={styles.flagText}>
-                {item.flagCount} flag{item.flagCount !== 1 ? "s" : ""}
-                {item.flagCount > 5 ? " — marked as suspicious" : ""}
-              </Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
+          </TouchableOpacity>
+        ))}
+      </View>
     </ScrollView>
   );
 }
@@ -174,7 +178,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 16,
-    marginBottom: 16,
     backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
@@ -225,7 +228,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     marginBottom: 16,
-    marginHorizontal: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,

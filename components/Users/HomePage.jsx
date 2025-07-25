@@ -1,9 +1,16 @@
 import React, { useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, TextInput, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [searchText, setSearchText] = useState("");
 
   const cardData = [
@@ -61,7 +68,11 @@ export default function HomeScreen() {
       {/* Content Cards */}
       <View style={styles.contentContainer}>
         {cardData.map((item) => (
-          <View key={item.id} style={styles.contentCard}>
+          <TouchableOpacity
+            key={item.id}
+            style={styles.contentCard}
+            onPress={() => navigation.navigate("UserViewDetails")}
+          >
             {/* Card Header with Title and Time */}
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>Card Title {item.id}</Text>
@@ -99,7 +110,7 @@ export default function HomeScreen() {
               nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
               reprehenderit.
             </Text>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </ScrollView>
