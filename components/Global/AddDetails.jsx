@@ -3,11 +3,11 @@ import {
     View,
     Text,
     TextInput,
-    TouchableOpacity,
     StyleSheet,
     ScrollView,
     Image,
     Platform,
+    TouchableOpacity,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -379,12 +379,12 @@ const styles = StyleSheet.create({
         paddingRight: 6,
     },
     removeIcon: {
-        position: 'absolute',
-        top: 2,
-        right: 2,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        zIndex: 1,
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    zIndex: 1,
     },
     thumbnail: {
         width: 80,

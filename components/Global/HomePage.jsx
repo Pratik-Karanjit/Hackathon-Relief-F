@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AddDetails from './AddDetails';
 
 // Updated Home Screen with content
-function HomeScreen() {
+function HomeScreen({navigation}) {
     const [searchText, setSearchText] = useState('');
 
     return (
@@ -32,13 +32,17 @@ function HomeScreen() {
             {/* Content Cards */}
             <View style={styles.contentContainer}>
                 {[1, 2, 3, 4, 5].map((item) => (
-                    <View key={item} style={styles.contentCard}>
+                    <TouchableOpacity 
+                        key={item} 
+                        style={styles.contentCard}
+                        onPress={() => navigation.navigate('ViewDetails')}
+                    >
                         <Text style={styles.cardTitle}>Card Title {item}</Text>
                         <Text style={styles.cardContent}>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit...
                         </Text>
                         <Text style={styles.cardFooter}>Posted 2 hours ago</Text>
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </View>
         </ScrollView>
