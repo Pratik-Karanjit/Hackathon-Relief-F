@@ -5,7 +5,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import HomePage from "./HomePage";
 import NotificationPage from "./NotificationPage";
 // import AddScreen from "./AddScreen";
-// import ProfileScreen from "./ProfileScreen";
+import ProfilePage from "./ProfilePage";
 
 const Tab = createBottomTabNavigator();
 
@@ -43,7 +43,7 @@ export default function BottomTabNavigator() {
       <Tab.Screen name="Home" component={HomePage} />
       {/* <Tab.Screen name="Add" component={AddScreen} /> */}
       <Tab.Screen name="Notifications" component={NotificationPage} />
-      {/* <Tab.Screen name="Profile" component={ProfileScreen} /> */}
+      <Tab.Screen name="Profile" component={ProfilePage} />
     </Tab.Navigator>
   );
 }
