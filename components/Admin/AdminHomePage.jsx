@@ -1,46 +1,89 @@
 import React, { useState } from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, Text, TextInput, ScrollView, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-// Updated Home Screen with content
-export default function HomeScreen() {
+export default function AdminHomePage({ navigation }) {
   const [searchText, setSearchText] = useState("");
 
-  // Sample data with different urgency levels and locations
   const cardData = [
-    { id: 1, location: "New York, NY", urgency: "high", time: "2 hours ago" },
+    {
+      id: 1,
+      title: "House Fire",
+      location: "New York, NY",
+      urgency: "high",
+      description:
+        "Extremely huge fire in one room of the house, residents are outside but the fire is spreading fast",
+      time: "2 hours ago",
+      flagCount: 0,
+    },
     {
       id: 2,
+      title: "Medical Emergency",
       location: "Los Angeles, CA",
       urgency: "medium",
+      description:
+        "Person fainted near downtown LA. Needs ambulance and basic CPR immediately.",
       time: "4 hours ago",
+      flagCount: 2,
     },
-    { id: 3, location: "Chicago, IL", urgency: "low", time: "6 hours ago" },
-    { id: 4, location: "Miami, FL", urgency: "high", time: "1 hour ago" },
-    { id: 5, location: "Seattle, WA", urgency: "medium", time: "3 hours ago" },
+    {
+      id: 3,
+      title: "Flooding",
+      location: "Chicago, IL",
+      urgency: "low",
+      description:
+        "Slight water rise in local street due to blocked drains. Residents worried about basement flooding.",
+      time: "6 hours ago",
+      flagCount: 1,
+    },
+    {
+      id: 4,
+      title: "Car Accident",
+      location: "Miami, FL",
+      urgency: "high",
+      description:
+        "Two vehicles crashed on highway, one overturned. Police and ambulance requested urgently.",
+      time: "1 hour ago",
+      flagCount: 0,
+    },
+    {
+      id: 5,
+      title: "Power Outage",
+      location: "Seattle, WA",
+      urgency: "medium",
+      description:
+        "Several households have lost power. Children and elderly in distress. Possibly transformer issue.",
+      time: "3 hours ago",
+      flagCount: 6,
+    },
   ];
 
   const getUrgencyColor = (urgency) => {
     switch (urgency) {
       case "high":
-        return "#dc3545"; // Red
+        return "#dc3545";
       case "medium":
-        return "#fd7e14"; // Orange
+        return "#fd7e14";
       case "low":
-        return "#28a745"; // Green
+        return "#28a745";
       default:
-        return "#6c757d"; // Gray
+        return "#6c757d";
     }
   };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header with Logo and Search */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>LOGO</Text>
+            <Text style={styles.logoText}>ADMIN</Text>
           </View>
         </View>
 
@@ -60,17 +103,23 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Content Cards */}
-      <View style={styles.contentContainer}>
-        {cardData.map((item) => (
-          <View key={item.id} style={styles.contentCard}>
-            {/* Card Header with Title and Time */}
+      {cardData.map((item) => (
+        <TouchableOpacity
+          key={item.id}
+          onPress={() => navigation.navigate("ReportDetail", { report: item })}
+        >
+          <View
+            key={item.id}
+            style={[
+              styles.contentCard,
+              item.flagCount > 5 && styles.flaggedCard,
+            ]}
+          >
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>Card Title {item.id}</Text>
+              <Text style={styles.cardTitle}>{item.title}</Text>
               <Text style={styles.cardTime}>{item.time}</Text>
             </View>
 
-            {/* Location and Urgency Row */}
             <View style={styles.locationRow}>
               <View style={styles.locationContainer}>
                 <Ionicons
@@ -93,17 +142,23 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            {/* Description */}
-            <Text style={styles.cardContent}>
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-              enim ad minim veniam, quis nostrud exercitation ullamco laboris
-              nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in
-              reprehenderit.
-            </Text>
+            <Text style={styles.cardContent}>{item.description}</Text>
+
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons
+                name="flag"
+                size={16}
+                color="#dc3545"
+                style={{ marginRight: 4 }}
+              />
+              <Text style={styles.flagText}>
+                {item.flagCount} flag{item.flagCount !== 1 ? "s" : ""}
+                {item.flagCount > 5 ? " — marked as suspicious" : ""}
+              </Text>
+            </View>
           </View>
-        ))}
-      </View>
+        </TouchableOpacity>
+      ))}
     </ScrollView>
   );
 }
@@ -119,6 +174,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 50,
     paddingBottom: 16,
+    marginBottom: 16,
     backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
@@ -132,15 +188,10 @@ const styles = StyleSheet.create({
   logo: {
     width: 40,
     height: 40,
-    backgroundColor: "#007bff",
+    backgroundColor: "#dc3545",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#007bff",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
   },
   logoText: {
     color: "white",
@@ -174,6 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 18,
     marginBottom: 16,
+    marginHorizontal: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -181,6 +233,10 @@ const styles = StyleSheet.create({
     elevation: 6,
     borderWidth: 1,
     borderColor: "#f1f3f4",
+  },
+  flaggedCard: {
+    backgroundColor: "#ffe6e6",
+    borderColor: "#ff4d4d",
   },
   cardHeader: {
     flexDirection: "row",
@@ -224,11 +280,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
   },
   urgencyText: {
     fontSize: 10,
@@ -241,5 +292,12 @@ const styles = StyleSheet.create({
     color: "#495057",
     lineHeight: 22,
     textAlign: "justify",
+    marginBottom: 6,
+  },
+  flagText: {
+    marginTop: 4,
+    color: "#c0392b",
+    fontWeight: "600",
+    fontSize: 13,
   },
 });

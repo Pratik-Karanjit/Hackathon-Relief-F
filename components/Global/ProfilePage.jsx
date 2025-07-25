@@ -18,20 +18,6 @@ export default function ProfilePage() {
   const [canVolunteer, setCanVolunteer] = useState(true);
   const [canDonate, setCanDonate] = useState(false);
 
-  //   const renderToggle = (label, value, onToggle) => (
-  //     <View style={styles.toggleRow}>
-  //       <Text style={styles.toggleLabel}>{label}</Text>
-  //       <TouchableOpacity
-  //         style={[styles.toggleButton, value ? styles.enabled : styles.disabled]}
-  //         onPress={onToggle}
-  //       >
-  //         <Text style={styles.toggleButtonText}>
-  //           {value ? "Enabled" : "Disabled"}
-  //         </Text>
-  //       </TouchableOpacity>
-  //     </View>
-  //   );
-
   const renderToggle = (label, value, onToggle) => (
     <View style={styles.toggleRow}>
       <Text style={styles.toggleLabel}>{label}</Text>
