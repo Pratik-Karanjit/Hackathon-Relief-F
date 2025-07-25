@@ -92,7 +92,7 @@ export default function HomePage() {
             })}
         >
             <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Add" component={AddScreen} />
+            <Tab.Screen name="Add" component={AddDetails} />
             <Tab.Screen name="Notifications" component={NotificationScreen} />
             <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
@@ -102,7 +102,7 @@ export default function HomePage() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',

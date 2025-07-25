@@ -7,7 +7,6 @@ import {
     StyleSheet,
     ScrollView,
     Image,
-    Modal,
     Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -17,20 +16,19 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Constants } from '../../constants';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function AddDetails({ navigation }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [urgency, setUrgency] = useState('Medium');
     const [date, setDate] = useState(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
     const [images, setImages] = useState([]);
     const [locationType, setLocationType] = useState('current');
     const [currentLocation, setCurrentLocation] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState(null);
-
-    // Time picker modal
-    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const handleImagePick = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -60,29 +58,63 @@ export default function AddDetails({ navigation }) {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.mainTitle}>Briefly describe the incident</Text>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+            <View style={styles.fullHeight}>
+                <View style={styles.header}>
+                    <View style={styles.logoContainer}>
+                        <View style={styles.logo}>
+                            <Text style={styles.logoText}>LOGO</Text>
+                        </View>
+                    </View>
 
-            <View style={styles.formContainer}>
-                <TextInput
-                    style={styles.titleInput}
-                    placeholder="Title"
-                    value={title}
-                    onChangeText={setTitle}
-                />
+                    <View style={styles.searchContainer}>
+                        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+                        <TextInput
+                            style={styles.searchInput}
+                            placeholder="Search..."
+                        />
+                    </View>
+                </View>
 
-                <TextInput
-                    style={styles.descriptionInput}
-                    placeholder="Description"
-                    value={description}
-                    onChangeText={setDescription}
-                    multiline
-                    numberOfLines={6}
-                    textAlignVertical="top"
-                />
+                <View style={styles.formContainer}>
+                    <Text style={styles.mainTitle}>Briefly describe the incident</Text>
 
-                <View style={styles.rowContainer}>
-                    <View style={styles.urgencyContainer}>
+                    <TextInput
+                        style={styles.titleInput}
+                        placeholder="Title"
+                        value={title}
+                        onChangeText={setTitle}
+                    />
+
+                    <TextInput
+                        style={styles.descriptionInput}
+                        placeholder="Description"
+                        value={description}
+                        onChangeText={setDescription}
+                        multiline
+                        numberOfLines={6}
+                        textAlignVertical="top"
+                    />
+
+                    <View style={styles.rowContainer}>
+                        <TouchableOpacity 
+                            style={styles.dateTimeButton}
+                            onPress={() => setShowTimePicker(true)}
+                        >
+                            <Text style={styles.label}>Time</Text>
+                            <Text>{date.toLocaleTimeString()}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.dateTimeButton}
+                            onPress={() => setShowDatePicker(true)}
+                        >
+                            <Text style={styles.label}>Date</Text>
+                            <Text>{date.toLocaleDateString()}</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.urgencyWrapper}>
                         <Text style={styles.label}>Urgency</Text>
                         <Picker
                             selectedValue={urgency}
@@ -95,121 +127,126 @@ export default function AddDetails({ navigation }) {
                         </Picker>
                     </View>
 
-                    <TouchableOpacity 
-                        style={styles.timeButton}
-                        onPress={() => setShowTimePicker(true)}
-                    >
-                        <Text style={styles.label}>Time</Text>
-                        <Text>{date.toLocaleTimeString()}</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.imageSection}>
-                    <View style={styles.imageHeader}>
-                        <Text style={styles.label}>Add Images</Text>
-                        <TouchableOpacity onPress={handleImagePick}>
-                            <MaterialIcons name="add-circle" size={24} color="#007bff" />
-                        </TouchableOpacity>
-                    </View>
-                    
-                    <ScrollView horizontal style={styles.imageList}>
-                        {images.map((uri, index) => (
-                            <Image
-                                key={index}
+                    <View>
+                        <View style={styles.imageHeader}>
+                            <Text style={styles.label}>Add Images</Text>
+                            <TouchableOpacity onPress={handleImagePick}>
+                                <MaterialIcons name="add-circle" size={24} color="#007bff" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <ScrollView horizontal style={styles.imageList}>
+                            {images.map((uri, index) => (
+                            <View key={index} style={styles.imageWrapper}>
+                                <Image
                                 source={{ uri }}
                                 style={styles.thumbnail}
-                            />
-                        ))}
-                    </ScrollView>
-                </View>
+                                />
+                                <TouchableOpacity
+                                style={styles.removeIcon}
+                                onPress={() => {
+                                    const updatedImages = images.filter((_, i) => i !== index);
+                                    setImages(updatedImages);
+                                }}
+                                >
+                                <Ionicons name="close-circle" size={20} color="red" />
+                                </TouchableOpacity>
+                            </View>
+                            ))}
+                        </ScrollView>
+                    </View>
 
-                <View style={styles.locationSection}>
-                    <Text style={styles.label}>Location</Text>
-                    <View style={styles.radioGroup}>
+                    <View style={styles.locationSection}>
+                        <Text style={styles.label}>Location</Text>
+                        <View style={styles.radioGroup}>
+                            <TouchableOpacity 
+                                style={styles.radioButton}
+                                onPress={() => handleLocationChange('current')}
+                            >
+                                <View style={[
+                                    styles.radio,
+                                    locationType === 'current' && styles.radioSelected
+                                ]} />
+                                <Text>Set my Location</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                                style={styles.radioButton}
+                                onPress={() => handleLocationChange('map')}
+                            >
+                                <View style={[
+                                    styles.radio,
+                                    locationType === 'map' && styles.radioSelected
+                                ]} />
+                                <Text>Pin on Map</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {locationType === 'map' && (
+                            <MapView
+                                style={styles.map}
+                                provider="google"
+                                apiKey={Constants.GOOGLE_MAPS_API_KEY}
+                                initialRegion={{
+                                    latitude: 37.78825,
+                                    longitude: -122.4324,
+                                    latitudeDelta: 0.0922,
+                                    longitudeDelta: 0.0421,
+                                }}
+                                onPress={(e) => setSelectedLocation(e.nativeEvent.coordinate)}
+                            >
+                                {selectedLocation && (
+                                    <Marker coordinate={selectedLocation} />
+                                )}
+                            </MapView>
+                        )}
+                    </View>
+
+                    <View style={styles.buttonContainer}>
                         <TouchableOpacity 
-                            style={styles.radioButton}
-                            onPress={() => handleLocationChange('current')}
+                            style={[styles.button, styles.cancelButton]}
+                            onPress={() => navigation.goBack()}
                         >
-                            <View style={[
-                                styles.radio,
-                                locationType === 'current' && styles.radioSelected
-                            ]} />
-                            <Text>Set my Location</Text>
+                            <Text style={styles.cancelButtonText}>Cancel</Text>
                         </TouchableOpacity>
                         
                         <TouchableOpacity 
-                            style={styles.radioButton}
-                            onPress={() => handleLocationChange('map')}
+                            style={[styles.button, styles.postButton]}
+                            onPress={() => {/* Handle post */}}
                         >
-                            <View style={[
-                                styles.radio,
-                                locationType === 'map' && styles.radioSelected
-                            ]} />
-                            <Text>Pin on Map</Text>
+                            <Text style={styles.postButtonText}>Post</Text>
                         </TouchableOpacity>
                     </View>
-
-                   {locationType === 'map' && (
-                      <MapView
-                          style={styles.map}
-                          provider="google"
-                          apiKey={Constants.GOOGLE_MAPS_API_KEY}
-                          initialRegion={{
-                              latitude: 37.78825,
-                              longitude: -122.4324,
-                              latitudeDelta: 0.0922,
-                              longitudeDelta: 0.0421,
-                          }}
-                          onPress={(e) => setSelectedLocation(e.nativeEvent.coordinate)}
-                      >
-                          {selectedLocation && (
-                              <Marker coordinate={selectedLocation} />
-                          )}
-                      </MapView>
-                  )}
                 </View>
 
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity 
-                        style={[styles.button, styles.cancelButton]}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity 
-                        style={[styles.button, styles.postButton]}
-                        onPress={() => {/* Handle post */}}
-                    >
-                        <Text style={styles.postButtonText}>Post</Text>
-                    </TouchableOpacity>
-                </View>
+                {showTimePicker && (
+                    <DateTimePicker
+                        value={date}
+                        mode="time"
+                        is24Hour={true}
+                        display="default"
+                        onChange={(event, selectedDate) => {
+                            setShowTimePicker(false);
+                            if (selectedDate) {
+                                setDate(selectedDate);
+                            }
+                        }}
+                    />
+                )}
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={date}
+                        mode="date"
+                        display="default"
+                        onChange={(event, selectedDate) => {
+                            setShowDatePicker(false);
+                            if (selectedDate) {
+                                setDate(selectedDate);
+                            }
+                        }}
+                    />
+                )}
             </View>
-
-            {/* Date Time Picker Modal */}
-            <Modal
-                visible={showTimePicker}
-                transparent={true}
-                animationType="slide"
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <DateTimePicker
-                            value={date}
-                            mode="datetime"
-                            onChange={(event, selectedDate) => {
-                                setDate(selectedDate || date);
-                            }}
-                        />
-                        <TouchableOpacity
-                            style={styles.closeButton}
-                            onPress={() => setShowTimePicker(false)}
-                        >
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
         </ScrollView>
     );
 }
@@ -218,7 +255,58 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        padding: 16,
+    },
+    scrollContent: {
+        paddingBottom: 40,
+    },
+    fullHeight: {
+        flexGrow: 1,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingTop: 50,
+        paddingBottom: 16,
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    logoContainer: {
+        marginRight: 12,
+    },
+    logo: {
+        width: 40,
+        height: 40,
+        backgroundColor: '#007bff',
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    logoText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    searchContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        height: 40,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: '#333',
     },
     mainTitle: {
         fontSize: 24,
@@ -228,55 +316,51 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         flex: 1,
+        padding: 35,
+        paddingTop: 16,
+        paddingBottom: 40,
+        width: '100%',
+    },
+    dateTimeButton: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+        padding: 12,
+        borderRadius: 8,
+        marginHorizontal: 4,
     },
     titleInput: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
+        backgroundColor: '#f5f5f5',
         padding: 12,
         fontSize: 16,
         marginBottom: 16,
+        borderRadius: 8,
+    },
+    urgencyWrapper: {
+        marginBottom: 16,
     },
     descriptionInput: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
+        backgroundColor: '#f5f5f5',
         padding: 12,
         fontSize: 16,
         marginBottom: 16,
         height: 120,
+        borderRadius: 8,
     },
     rowContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 16,
     },
-    urgencyContainer: {
-        flex: 1,
-        marginRight: 8,
-    },
     picker: {
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ddd',
+        backgroundColor: '#f5f5f5',
         borderRadius: 8,
-    },
-    timeButton: {
-        flex: 1,
-        marginLeft: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        padding: 12,
+        marginTop: 8,
     },
     label: {
         fontSize: 16,
         fontWeight: '500',
         marginBottom: 8,
         color: '#333',
-    },
-    imageSection: {
-        marginBottom: 16,
     },
     imageHeader: {
         flexDirection: 'row',
@@ -287,6 +371,20 @@ const styles = StyleSheet.create({
     imageList: {
         flexDirection: 'row',
         marginBottom: 8,
+    },
+    imageWrapper: {
+        position: 'relative',
+        marginRight: 8,
+        paddingTop: 6,
+        paddingRight: 6,
+    },
+    removeIcon: {
+        position: 'absolute',
+        top: 2,
+        right: 2,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        zIndex: 1,
     },
     thumbnail: {
         width: 80,
@@ -349,30 +447,6 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     postButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        padding: 20,
-        borderRadius: 12,
-        width: '80%',
-    },
-    closeButton: {
-        backgroundColor: '#007bff',
-        padding: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 16,
-    },
-    closeButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '500',
