@@ -8,7 +8,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import * as Notifications from 'expo-notifications';
 import { useEffect, useRef } from 'react';
-import { registerForPushNotificationsAsync } from './utils/notifications';
+import { registerForPushNotificationsAsync } from './utils/notifications.js';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,10 +25,14 @@ export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
+useEffect(() => {
+  const setupNotifications = async () => {
+    try {
+      const token = await registerForPushNotificationsAsync();
       console.log('📲 FCM Token:', token);
-    });
+    } catch (error) {
+      console.error('❌ Failed to get FCM Token:', error);
+    }
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
       console.log('📥 Notification Received:', notification);
@@ -37,19 +41,26 @@ export default function App() {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('👆 Notification Clicked:', response);
     });
+  };
 
-    return () => {
-      Notifications.removeNotificationSubscription(notificationListener.current);
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
-  }, []);
+  setupNotifications();
+
+  return () => {
+    notificationListener.current?.remove();
+    responseListener.current?.remove();
+  };
+}, []);
+
+
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginPage} />
+<Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+
+   <Stack.Screen name="Login" component={LoginPage} />
+
         <Stack.Screen name="Home" component={HomePage} />
-        <Stack.Screen name="Register" component={RegisterPage} />
+        {/* <Stack.Screen name="Register" component={RegisterPage} /> */}
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

@@ -84,7 +84,7 @@ function HomeScreen() {
 
 // Keep other screens simple for now
 function AddScreen() {
-    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Add</Text></View>;
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Adds</Text></View>;
 }
 function ProfileScreen() {
     return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Profile</Text></View>;
