@@ -24,7 +24,7 @@ export default function LoginPage({ navigation }) {
     };
 
     const navigateToRegister = () => {
-        Alert.alert('Info', 'Navigate to Register page');
+        navigation.navigate('Register');
     };
 
     return (
