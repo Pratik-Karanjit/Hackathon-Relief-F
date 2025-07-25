@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "965858318750",
+    "project_id": "relief-hackathon",
+    "storage_bucket": "relief-hackathon.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:965858318750:android:d69a0043e04f3f2cb6de8f",
+        "android_client_info": {
+          "package_name": "com.amogh.reliefhackathon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJbsikXhCG4TNZrHCzgOq38nXcW1n8ed8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -12,7 +12,7 @@ import { registerForPushNotificationsAsync } from './utils/notifications';
 
 const Stack = createNativeStackNavigator();
 
-// Optional: How notifications are handled in foreground
+// Set up how notifications behave when received in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -48,9 +48,8 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={LoginPage} />
-        {/* Uncomment these as needed */}
-        {/* <Stack.Screen name="Home" component={HomePage} /> */}
-        {/* <Stack.Screen name="Register" component={RegisterPage} /> */}
+        <Stack.Screen name="Home" component={HomePage} />
+        <Stack.Screen name="Register" component={RegisterPage} />
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>
