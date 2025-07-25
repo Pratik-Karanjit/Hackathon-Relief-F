@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AddDetails from './AddDetails';
 
 // Updated Home Screen with content
 function HomeScreen() {
@@ -84,7 +85,7 @@ function HomeScreen() {
 
 // Keep other screens simple for now
 function AddScreen() {
-    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Add</Text></View>;
+    return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><AddDetails/></View>;
 }
 function ProfileScreen() {
     return <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text>Profile</Text></View>;

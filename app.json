@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.myexpoapp",
+      "config": {
+        "googleMapsApiKey": "AIzaSyBP5RD1x9CfsGlNKjgri6Lc6h68jLI8xNk"
+      }
     },
     "android": {
       "package": "com.amogh.reliefhackathon",
@@ -22,15 +26,22 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBP5RD1x9CfsGlNKjgri6Lc6h68jLI8xNk"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "8637e4b3-e94e-42d0-a420-3c0fcbffdfa9"
-      }
-    }
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
+    ]
   }
 }
