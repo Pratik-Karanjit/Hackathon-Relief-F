@@ -20,12 +20,10 @@ export default function LoginPage({ navigation }) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
-        // Add your login logic here
         Alert.alert('Success', 'Login functionality to be implemented');
     };
 
     const navigateToRegister = () => {
-        // navigation.navigate('Register'); // Uncomment when navigation is set up
         Alert.alert('Info', 'Navigate to Register page');
     };
 
@@ -42,7 +40,7 @@ export default function LoginPage({ navigation }) {
                 </View>
 
                 <View style={styles.formContainer}>
-                    <Text style={styles.title}>Welcomes Back</Text>
+                    <Text style={styles.title}>Welcome Back</Text>
                     <Text style={styles.subtitle}>Sign in to your account</Text>
 
                     <TextInput
@@ -85,31 +83,25 @@ export default function LoginPage({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 16,
+    },
     card: {
         backgroundColor: '#fff',
-        marginHorizontal: 20,
+        marginHorizontal: 0,
         borderRadius: 12,
-        padding: 40,
+        padding: 50,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
         elevation: 5,
-        justifyContent: 'center',
-        alignItems: 'stretch',
     },
-
-    container: {
-        flex: 1,
-        backgroundColor: '#f8f9fa',
-        justifyContent: 'center',
-        paddingHorizontal: 16,
-    },
-
     logoContainer: {
         alignItems: 'center',
-        paddingTop: 80,
-        paddingBottom: 40,
+        marginBottom: 30,
     },
     logoPlaceholder: {
         width: 80,
@@ -125,8 +117,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     formContainer: {
-        flex: 1,
-        paddingHorizontal: 30,
+        alignItems: 'stretch',
     },
     title: {
         fontSize: 28,
@@ -139,10 +130,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: 30,
     },
     input: {
-        backgroundColor: 'white',
+        backgroundColor: '#f8f9fa',
         paddingHorizontal: 15,
         paddingVertical: 15,
         borderRadius: 8,
@@ -166,7 +157,7 @@ const styles = StyleSheet.create({
     },
     forgotPassword: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 25,
     },
     forgotPasswordText: {
         color: '#007bff',
