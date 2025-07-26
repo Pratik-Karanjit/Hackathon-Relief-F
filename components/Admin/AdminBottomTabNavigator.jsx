@@ -4,6 +4,7 @@ import Ionicons from "react-native-vector-icons/Ionicons";
 import NotificationPage from "../Global/NotificationPage";
 import ProfilePage from "../Global/ProfilePage";
 import AdminStackNavigator from "./AdminStackNavigator";
+import AdminAddOrganization from "./AdminAddOrganization";
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +18,9 @@ export default function AdminBottomTabNavigator() {
           switch (route.name) {
             case "Home":
               iconName = focused ? "home" : "home-outline";
+              break;
+            case "Add Org":
+              iconName = focused ? "business" : "business-outline";
               break;
             case "Notifications":
               iconName = focused ? "notifications" : "notifications-outline";
@@ -33,6 +37,7 @@ export default function AdminBottomTabNavigator() {
       })}
     >
       <Tab.Screen name="Home" component={AdminStackNavigator} />
+      <Tab.Screen name="Add Org" component={AdminAddOrganization} />
       <Tab.Screen name="Notifications" component={NotificationPage} />
       <Tab.Screen name="Profile" component={ProfilePage} />
     </Tab.Navigator>

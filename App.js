@@ -6,7 +6,6 @@ import RegisterPage from "./components/Auth/RegisterPage";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
-import { registerForPushNotificationsAsync } from "./utils/notifications.js";
 import UserBottomTabNavigator from "./components/Users/UserBottomTabNavigator.jsx";
 import AdminBottomTabNavigator from "./components/Admin/AdminBottomTabNavigator.jsx";
 import StaticMap from "./components/Users/StaticMap.js";
@@ -18,19 +17,6 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isOffline, setIsOffline] = useState(false);
-
-  useEffect(() => {
-    const setupNotifications = async () => {
-      try {
-        const token = await registerForPushNotificationsAsync();
-        console.log("📲 FCM Token:", token);
-      } catch (error) {
-        console.error("❌ Failed to get FCM Token:", error);
-      }
-    };
-
-    setupNotifications();
-  }, []);
 
   const userRole = "user";
 
@@ -53,7 +39,8 @@ export default function App() {
           initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
-             <Stack.Screen name="Login" component={LoginPage} />
+<Stack.Screen name="Login" component={LoginPage} /> 
+          <Stack.Screen name="Register" component={RegisterPage} /> 
           {userRole === "admin" ? (
             <Stack.Screen
               name="AdminTabs"

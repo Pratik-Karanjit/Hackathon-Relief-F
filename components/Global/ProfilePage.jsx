@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Modal,
 } from "react-native";
 
 export default function ProfilePage() {
@@ -15,8 +16,40 @@ export default function ProfilePage() {
     address: "Kathmandu, Nepal",
   };
 
+  const [menuVisible, setMenuVisible] = useState(false);
   const [canVolunteer, setCanVolunteer] = useState(true);
   const [canDonate, setCanDonate] = useState(false);
+
+  const handleLogout = () => {
+    // Add your logout logic here
+    console.log("Logging out...");
+  };
+
+  const renderMenu = () => (
+    <Modal
+      transparent={true}
+      visible={menuVisible}
+      onRequestClose={() => setMenuVisible(false)}
+    >
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={() => setMenuVisible(false)}
+      >
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              handleLogout();
+              setMenuVisible(false);
+            }}
+          >
+            <Text style={styles.menuText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
 
   const renderToggle = (label, value, onToggle) => (
     <View style={styles.toggleRow}>
@@ -48,7 +81,14 @@ export default function ProfilePage() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Profile</Text>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => setMenuVisible(true)}
+        >
+          <Text style={styles.menuDots}>⋮</Text>
+        </TouchableOpacity>
       </View>
+      {renderMenu()}
 
       <View style={styles.field}>
         <Text style={styles.label}>Full Name</Text>
@@ -97,6 +137,46 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  menuButton: {
+    padding: 8,
+    marginRight: 5,
+  },
+  menuDots: {
+    fontSize: 24,
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  menuContainer: {
+    position: 'absolute',
+    top: 90,
+    right: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  menuItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#333',
   },
   headerText: {
     fontSize: 22,

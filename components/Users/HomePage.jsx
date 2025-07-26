@@ -264,7 +264,10 @@ export default function HomeScreen({ navigation }) {
               <TouchableOpacity
                 key={incident.incidentId || incident.id}
                 style={styles.contentCard}
-                onPress={() => navigation.navigate("UserViewDetails", { incident })}
+                onPress={() => navigation.navigate("UserViewDetails", {
+                  incidentId: incident.incidentId || incident.id,
+                  incident: incident // Pass the full incident data as fallback
+                })}
               >
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardTitle} numberOfLines={2}>

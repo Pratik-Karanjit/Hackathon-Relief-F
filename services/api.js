@@ -10,14 +10,30 @@ const api = axios.create({
   },
 });
 
+// Routes that don't require authentication token
+const PUBLIC_ROUTES = [
+  '/user/login',
+  '/user/signup',
+  '/user/signup/user'
+];
+
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
     try {
-      // Add auth token if available
-      const token = await AsyncStorage.getItem('userToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // Check if the current route requires authentication
+      const isPublicRoute = PUBLIC_ROUTES.some(route => 
+        config.url?.includes(route) || config.url === route
+      );
+
+      // Add auth token only if it's not a public route
+      if (!isPublicRoute) {
+        const token = await AsyncStorage.getItem('userToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } else {
+        console.log('Skipping token for public route:', config.url);
       }
     } catch (error) {
       console.error('Error getting token from AsyncStorage:', error);

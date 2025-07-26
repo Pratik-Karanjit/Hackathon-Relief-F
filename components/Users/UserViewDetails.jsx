@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,53 +9,116 @@ import {
   Modal,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MapView, { Marker } from "react-native-maps";
 import { Constants } from "../../constants";
+import api from '../../services/api';
 
-export default function UserViewDetails({ navigation }) {
+export default function UserViewDetails({ navigation, route }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [incident, setIncident] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Dummy data
-  const incident = {
-    incidentId: 1,
-    title: "Flood in Bhaktapur",
-    longitude: 85.429,
-    latitude: 27.672,
-    urgencyLevel: "HIGH",
-    description: "River has overflowed and flooded homes near the main road.",
-    organizationType: "POLICE",
-    incidentDate: "2025-07-26T10:30:00",
-    listedDate: "2025-07-26T13:49:21.004848",
-    images: [
-      {
-        imagePath:
-          "https://res.cloudinary.com/deytqgusq/image/upload/v1753517062/incidents/smk35mfftdw2vxy3bfec.jpg",
-        imageType: "jpg",
-      },
-      {
-        imagePath:
-          "https://res.cloudinary.com/deytqgusq/image/upload/v1753517063/incidents/s9jbnsois6oufcvdjnhq.jpg",
-        imageType: "jpg",
-      },
-    ],
-    uploader: {
-      userId: 1,
-      firstName: "Amogh",
-      lastName: "Bajracharya",
-    },
-  };
+  // Get incidentId from route params
+  const { incidentId, incident: fallbackIncident } = route.params || {};
 
-  // Donation data
+  // Donation data (you might want to fetch this from API too)
   const donationData = {
     goal: 50000,
     raised: 32500,
     donorCount: 127,
     description:
       "Funds will be used to provide emergency relief supplies, temporary shelter, and clean water to flood victims in the downtown area. Your donation will directly help families rebuild their lives.",
+  };
+
+  useEffect(() => {
+    if (incidentId) {
+      fetchIncidentDetails();
+    } else if (fallbackIncident) {
+      // Use fallback incident data if available
+      setIncident(fallbackIncident);
+      setIsLoading(false);
+    } else {
+      setError('No incident ID provided');
+      setIsLoading(false);
+    }
+  }, [incidentId]);
+
+  const fetchIncidentDetails = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('Fetching incident details for ID:', incidentId);
+
+      const response = await api.get(`/incident/${incidentId}`);
+
+      console.log('Incident details response:', response.data);
+
+      if (response.status === 200) {
+        let incidentData = null;
+
+        // Handle different response structures
+        if (response.data.success && response.data.data) {
+          incidentData = response.data.data;
+        } else if (response.data.data) {
+          incidentData = response.data.data;
+        } else {
+          incidentData = response.data;
+        }
+
+        console.log('Processed incident data:', incidentData);
+        setIncident(incidentData);
+      }
+
+    } catch (error) {
+      console.error('Error fetching incident details:', error);
+
+      let errorMessage = 'Failed to load incident details. Please try again.';
+
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 401) {
+          errorMessage = 'Please login again to access incident details.';
+        } else if (status === 403) {
+          errorMessage = 'You do not have permission to view this incident.';
+        } else if (status === 404) {
+          errorMessage = 'Incident not found.';
+        } else if (status >= 500) {
+          errorMessage = 'Server error. Please try again later.';
+        } else {
+          errorMessage = data.message || errorMessage;
+        }
+      } else if (error.request) {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+
+      setError(errorMessage);
+
+      // Use fallback incident data if available
+      if (fallbackIncident) {
+        console.log('Using fallback incident data');
+        setIncident(fallbackIncident);
+        setError(null);
+      } else {
+        Alert.alert('Error', errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    if (incidentId) {
+      fetchIncidentDetails();
+    }
   };
 
   const progressPercentage = (donationData.raised / donationData.goal) * 100;
@@ -67,22 +130,16 @@ export default function UserViewDetails({ navigation }) {
     }
 
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch("YOUR_API_BASE_URL/initialize-esewa", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: parseFloat(donationAmount),
-          incidentId: "incident_id_here", // Add actual incident ID
-          // Add other required fields for eSewa
-        }),
+      // Use the actual incident ID for donation
+      const response = await api.post("/initialize-esewa", {
+        amount: parseFloat(donationAmount),
+        incidentId: incident?.incidentId || incident?.id,
+        // Add other required fields for eSewa
       });
 
-      const result = await response.json();
+      const result = response.data;
 
-      if (response.ok) {
+      if (response.status === 200) {
         Alert.alert("Success", "Donation initiated successfully");
         setModalVisible(false);
         setDonationAmount("");
@@ -95,6 +152,51 @@ export default function UserViewDetails({ navigation }) {
       console.error("Donation error:", error);
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007bff" />
+        <Text style={styles.loadingText}>Loading incident details...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error && !incident) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle-outline" size={64} color="#dc3545" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // No incident data
+  if (!incident) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="document-outline" size={64} color="#6c757d" />
+        <Text style={styles.errorText}>No incident data available</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -127,7 +229,7 @@ export default function UserViewDetails({ navigation }) {
                       text: "Yes, Flag it",
                       style: "destructive",
                       onPress: () => {
-                        // 🔴 Handle flag post logic here
+                        // Handle flag post logic here
                         Alert.alert("Flagged", "This post has been flagged.");
                       },
                     },
@@ -142,7 +244,7 @@ export default function UserViewDetails({ navigation }) {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>{incident.title}</Text>
+        <Text style={styles.title}>{incident.title || 'Incident Report'}</Text>
 
         <View
           style={[
@@ -152,69 +254,89 @@ export default function UserViewDetails({ navigation }) {
                 incident.urgencyLevel === "HIGH"
                   ? "#ff4444"
                   : incident.urgencyLevel === "MEDIUM"
-                  ? "#ffbb33"
-                  : "#00C851",
+                    ? "#ffbb33"
+                    : "#00C851",
             },
           ]}
         >
-          <Text style={styles.urgencyText}>{incident.urgencyLevel}</Text>
+          <Text style={styles.urgencyText}>{incident.urgencyLevel || 'UNKNOWN'}</Text>
         </View>
 
         <View style={styles.detailsRow}>
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>
-              {new Date(incident.incidentDate).toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              })}
-              , {new Date(incident.incidentDate).toLocaleDateString()}
+              {incident.incidentDate ? (
+                <>
+                  {new Date(incident.incidentDate).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                  , {new Date(incident.incidentDate).toLocaleDateString()}
+                </>
+              ) : (
+                'Date not available'
+              )}
             </Text>
           </View>
         </View>
 
         <Text style={styles.descriptionTitle}>Description</Text>
-        <Text style={styles.description}>{incident.description}</Text>
+        <Text style={styles.description}>
+          {incident.description || 'No description available.'}
+        </Text>
 
-        <Text style={styles.imagesTitle}>Images</Text>
-        <ScrollView
-          horizontal
-          style={styles.imageScroll}
-          showsHorizontalScrollIndicator={false}
-        >
-          {incident.images.map((img, index) => (
-            <Image
-              key={index}
-              source={{ uri: img.imagePath }}
-              style={styles.image}
-            />
-          ))}
-        </ScrollView>
-        {/* Add Map Section */}
-        <Text style={styles.mapTitle}>Location</Text>
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: incident.latitude,
-              longitude: incident.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            }}
-            scrollEnabled={false}
-            zoomEnabled={false}
-            rotateEnabled={false}
-            pitchEnabled={false}
-          >
-            <Marker
-              coordinate={{
-                latitude: incident.latitude,
-                longitude: incident.longitude,
-              }}
-              title={incident.title}
-            />
-          </MapView>
-        </View>
+        {/* Images Section */}
+        {incident.images && incident.images.length > 0 && (
+          <>
+            <Text style={styles.imagesTitle}>Images</Text>
+            <ScrollView
+              horizontal
+              style={styles.imageScroll}
+              showsHorizontalScrollIndicator={false}
+            >
+              {incident.images.map((img, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: img.imagePath }}
+                  style={styles.image}
+                  onError={() => console.log('Failed to load image:', img.imagePath)}
+                />
+              ))}
+            </ScrollView>
+          </>
+        )}
+
+        {/* Map Section */}
+        {incident.latitude && incident.longitude && (
+          <>
+            <Text style={styles.mapTitle}>Location</Text>
+            <View style={styles.mapContainer}>
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: incident.latitude,
+                  longitude: incident.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: incident.latitude,
+                    longitude: incident.longitude,
+                  }}
+                  title={incident.title}
+                />
+              </MapView>
+            </View>
+          </>
+        )}
+
         {/* Donate Button */}
         <TouchableOpacity
           style={styles.donateButton}
@@ -324,6 +446,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#007bff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -368,6 +527,15 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 16,
     padding: 4,
+    backgroundColor: '#6c757d',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 20,
@@ -442,7 +610,7 @@ const styles = StyleSheet.create({
   },
   timeContainer: {
     flex: 1,
-    alignItems: "flex-start", // Changed from flex-end
+    alignItems: "flex-start",
   },
   timeText: {
     fontSize: 14,

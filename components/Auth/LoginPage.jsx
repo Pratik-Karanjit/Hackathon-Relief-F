@@ -11,11 +11,62 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../../services/api';
+import { registerForPushNotificationsAsync } from '../../utils/notifications.js';
 
 export default function LoginPage({ navigation }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    const setupNotifications = async () => {
+        try {
+            const token = await registerForPushNotificationsAsync();
+            console.log("📲 FCM Token:", token);
+
+            // Store the FCM token in AsyncStorage
+            if (token) {
+                await AsyncStorage.setItem('fcmToken', token);
+                console.log('FCM Token stored successfully');
+
+                // Get userId from AsyncStorage
+                try {
+                    const userId = await AsyncStorage.getItem('userId');
+                    console.log('Retrieved userId from AsyncStorage:', userId);
+
+                    if (userId) {
+                        // Convert to integer and ensure it's a valid number
+                        const userIdAsNumber = parseInt(userId, 10);
+
+                        if (isNaN(userIdAsNumber)) {
+                            console.error('Invalid userId format:', userId);
+                            return;
+                        }
+
+                        const fcmData = {
+                            id: userIdAsNumber, // Send as integer, not Number()
+                            fcmToken: token
+                        };
+
+                        console.log('Sending FCM data to backend:', fcmData);
+                        console.log('UserId type:', typeof fcmData.id, 'Value:', fcmData.id);
+
+                        await api.post('/fcm/sendToken', fcmData);
+                        console.log('FCM Token sent to backend successfully');
+                    } else {
+                        console.warn('No userId found in AsyncStorage, skipping FCM token backend update');
+                    }
+                } catch (error) {
+                    console.error('Failed to send FCM token to backend:', error);
+                    // Don't fail the login process if FCM token update fails
+                }
+            }
+
+            return token;
+        } catch (error) {
+            console.error("❌ Failed to get FCM Token:", error);
+            return null;
+        }
+    };
 
     const handleLogin = async () => {
         // Validation
@@ -66,6 +117,17 @@ export default function LoginPage({ navigation }) {
                         console.log('User data stored successfully');
                     }
 
+                    // Store userId separately for easy access
+                    const userId = userData.user?.id ||
+                        userData.user?.userId ||
+                        userData.userId ||
+                        userData.id;
+
+                    if (userId) {
+                        await AsyncStorage.setItem('userId', userId.toString());
+                        console.log('UserId stored successfully:', userId);
+                    }
+
                     // Store additional data if available
                     if (userData.refreshToken) {
                         await AsyncStorage.setItem('refreshToken', userData.refreshToken);
@@ -79,6 +141,10 @@ export default function LoginPage({ navigation }) {
                     await AsyncStorage.setItem('loginResponse', JSON.stringify(userData));
 
                     console.log('All user data stored in AsyncStorage');
+
+                    // Setup FCM notifications after successful login and data storage
+                    console.log('Setting up FCM notifications...');
+                    await setupNotifications();
 
                     Alert.alert(
                         'Success',
@@ -98,6 +164,9 @@ export default function LoginPage({ navigation }) {
                 } catch (storageError) {
                     console.error('AsyncStorage error:', storageError);
                     Alert.alert('Warning', 'Login successful but failed to save session data');
+
+                    // Still try to setup notifications even if storage fails
+                    await setupNotifications();
                     navigateToHome(userData.userRole || 'user');
                 }
             }
@@ -151,7 +220,6 @@ export default function LoginPage({ navigation }) {
         }
     };
 
-    // ... rest of your JSX remains the same
     return (
         <KeyboardAvoidingView
             style={[styles.container, { backgroundColor: isLoading ? '#f5f5f5' : '#fff' }]}
@@ -225,7 +293,6 @@ export default function LoginPage({ navigation }) {
     );
 }
 
-// ... your existing styles remain the same
 const styles = StyleSheet.create({
     container: {
         flex: 1,
