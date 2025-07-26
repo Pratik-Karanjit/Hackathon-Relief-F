@@ -13,7 +13,6 @@ import UserBottomTabNavigator from "./components/Users/UserBottomTabNavigator";
 import AdminBottomTabNavigator from "./components/Admin/AdminBottomTabNavigator";
 import OfflinePage from './components/Global/OfflinePage';
 
-
 const Stack = createNativeStackNavigator();
 
 const theme = {
@@ -44,6 +43,7 @@ export default function App() {
   if (isOffline) {
     return <OfflinePage />;
   }
+
   return (
     <PaperProvider theme={theme}>
       <NavigationContainer>
@@ -51,9 +51,8 @@ export default function App() {
           initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
-          {/* <Stack.Screen name="Login" component={LoginPage} /> */}
+          <Stack.Screen name="Login" component={LoginPage} />
           <Stack.Screen name="Register" component={RegisterPage} />
-          {/* <Stack.Screen name="Home" component={BottomTabNavigator} /> */}
 
           {userRole === "admin" ? (
             <Stack.Screen name="AdminTabs" component={AdminBottomTabNavigator} />
@@ -63,7 +62,6 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
-
   );
 }
 

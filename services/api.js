@@ -1,4 +1,5 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Constants } from '../constants';
 
 // Create axios instance with base configuration
@@ -11,17 +12,22 @@ const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Add auth token if available
-    // const token = getStoredToken(); // You can implement this function
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+  async (config) => {
+    try {
+      // Add auth token if available
+      const token = await AsyncStorage.getItem('userToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      console.error('Error getting token from AsyncStorage:', error);
+    }
     
     console.log('API Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       baseURL: config.baseURL,
+      headers: config.headers,
       data: config.data,
     });
     
@@ -44,18 +50,22 @@ api.interceptors.response.use(
     
     return response;
   },
-  (error) => {
+  async (error) => {
     console.error('Response Error:', error);
     
     // Handle common error scenarios
     if (error.response) {
-      // Server responded with error status
       const { status, data } = error.response;
       
       switch (status) {
         case 401:
-          // Handle unauthorized - maybe redirect to login
-          console.log('Unauthorized access');
+          // Handle unauthorized - clear stored data and redirect to login
+          console.log('Unauthorized access - clearing stored data');
+          try {
+            await AsyncStorage.multiRemove(['userToken', 'userData', 'refreshToken', 'userRole', 'loginResponse']);
+          } catch (clearError) {
+            console.error('Error clearing AsyncStorage:', clearError);
+          }
           break;
         case 403:
           console.log('Forbidden access');
@@ -70,10 +80,8 @@ api.interceptors.response.use(
           console.log(`Error ${status}:`, data);
       }
     } else if (error.request) {
-      // Network error
       console.log('Network error - no response received');
     } else {
-      // Something else happened
       console.log('Request setup error:', error.message);
     }
     
