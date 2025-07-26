@@ -32,7 +32,7 @@ export default function App() {
     setupNotifications();
   }, []);
 
-  const userRole = "admin";
+  const userRole = "user";
 
   // useEffect(() => {
   //   const unsubscribe = NetInfo.addEventListener((state) => {
@@ -50,9 +50,10 @@ export default function App() {
     <PaperProvider theme={theme}>
       <NavigationContainer>
         <Stack.Navigator
-          // initialRouteName="Login"
+          initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
+             <Stack.Screen name="Login" component={LoginPage} />
           {userRole === "admin" ? (
             <Stack.Screen
               name="AdminTabs"
