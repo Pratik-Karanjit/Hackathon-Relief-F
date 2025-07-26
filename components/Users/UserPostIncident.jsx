@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -43,24 +43,58 @@ export default function UserPostIncident({ navigation }) {
     }
   };
 
+  useEffect(() => {
+    const requestPermissionAndFetchLocation = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === "granted") {
+        const location = await Location.getCurrentPositionAsync({});
+        const coords = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        setCurrentLocation(coords);
+
+        setSelectedLocation((prev) => prev || coords);
+      } else {
+        console.warn("Location permission not granted");
+      }
+    };
+
+    requestPermissionAndFetchLocation();
+  }, []);
+
   const handleLocationChange = async (type) => {
     setLocationType(type);
+
     if (type === "current") {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
         const location = await Location.getCurrentPositionAsync({});
-        setCurrentLocation({
+        const coords = {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
-        });
+        };
+        setCurrentLocation(coords);
+        setSelectedLocation(coords);
       }
     }
+
+    if (type === "map" && currentLocation && !selectedLocation) {
+      setSelectedLocation(currentLocation);
+    }
   };
+  console.log(locationType, "locationType");
+
+  console.log(currentLocation, "currentLocation");
+  console.log(selectedLocation, "slectedLocation");
+
+  const [isDraggingMarker, setIsDraggingMarker] = useState(false);
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
+      scrollEnabled={!isDraggingMarker}
     >
       <View style={styles.fullHeight}>
         <View style={styles.header}>
@@ -184,19 +218,111 @@ export default function UserPostIncident({ navigation }) {
             </View>
 
             {locationType === "map" && (
+              // <MapView
+              //   style={styles.map}
+              //   provider="google"
+              //   region={
+              //     selectedLocation
+              //       ? {
+              //           ...selectedLocation,
+              //           latitudeDelta: 0.005,
+              //           longitudeDelta: 0.005,
+              //         }
+              //       : currentLocation
+              //       ? {
+              //           ...currentLocation,
+              //           latitudeDelta: 0.005,
+              //           longitudeDelta: 0.005,
+              //         }
+              //       : {
+              //           latitude: 27.7172,
+              //           longitude: 85.324,
+              //           latitudeDelta: 0.1,
+              //           longitudeDelta: 0.1,
+              //         }
+              //   }
+              //   onPress={(e) => {
+              //     const { coordinate } = e.nativeEvent;
+              //     if (
+              //       !selectedLocation ||
+              //       selectedLocation.latitude !== coordinate.latitude ||
+              //       selectedLocation.longitude !== coordinate.longitude
+              //     ) {
+              //       setSelectedLocation(coordinate);
+              //     }
+              //   }}
+              // >
+              //   {(selectedLocation || currentLocation) && (
+              //     <Marker coordinate={selectedLocation || currentLocation} />
+              //   )}
+              // </MapView>
+
+              // <MapView
+              //   style={styles.map}
+              //   // initialCamera={{
+              //   //   center: currentLocation,
+              //   //   zoom: 14,
+              //   //   pitch: 0,
+              //   //   heading: 0,
+              //   //   altitude: 0,
+              //   // }}
+              //   onPress={(e) => setSelectedLocation(e.nativeEvent.coordinate)}
+              // >
+              //   {selectedLocation && <Marker coordinate={selectedLocation} />}
+              // </MapView>
+
+              // <MapView
+              //   style={styles.map}
+              //   region={{
+              //     latitude:
+              //       selectedLocation?.latitude || currentLocation.latitude,
+              //     longitude:
+              //       selectedLocation?.longitude || currentLocation.longitude,
+              //     latitudeDelta: 0.01,
+              //     longitudeDelta: 0.01,
+              //   }}
+              //   scrollEnabled={false}
+              //   zoomEnabled={false}
+              //   rotateEnabled={false}
+              //   pitchEnabled={false}
+              //   onPress={(e) => {
+              //     setSelectedLocation(e.nativeEvent.coordinate);
+              //   }}
+              // >
+              //   <Marker
+              //     coordinate={
+              //       selectedLocation || {
+              //         latitude: currentLocation.latitude,
+              //         longitude: currentLocation.longitude,
+              //       }
+              //     }
+              //   />
+              // </MapView>
+
               <MapView
                 style={styles.map}
-                provider="google"
-                apiKey={Constants.GOOGLE_MAPS_API_KEY}
-                initialRegion={{
-                  latitude: 37.78825,
-                  longitude: -122.4324,
-                  latitudeDelta: 0.0922,
-                  longitudeDelta: 0.0421,
+                region={{
+                  latitude:
+                    selectedLocation?.latitude || currentLocation.latitude,
+                  longitude:
+                    selectedLocation?.longitude || currentLocation.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
                 }}
-                onPress={(e) => setSelectedLocation(e.nativeEvent.coordinate)}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
               >
-                {selectedLocation && <Marker coordinate={selectedLocation} />}
+                <Marker
+                  draggable
+                  coordinate={selectedLocation || currentLocation}
+                  onDragStart={() => setIsDraggingMarker(true)}
+                  onDragEnd={(e) => {
+                    setSelectedLocation(e.nativeEvent.coordinate);
+                    setIsDraggingMarker(false);
+                  }}
+                />
               </MapView>
             )}
           </View>
@@ -212,7 +338,17 @@ export default function UserPostIncident({ navigation }) {
             <TouchableOpacity
               style={[styles.button, styles.postButton]}
               onPress={() => {
-                /* Handle post */
+                const postData = {
+                  title,
+                  description,
+                  urgency,
+                  date: date.toISOString(),
+                  images,
+                  locationType,
+                  location: selectedLocation || currentLocation,
+                };
+
+                console.log("Submitted Report:", postData);
               }}
             >
               <Text style={styles.postButtonText}>Post</Text>

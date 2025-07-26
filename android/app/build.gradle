@@ -87,13 +87,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.amogh.reliefhackathon"
+    namespace 'com.amogh.reliefhackathon'
     defaultConfig {
-        applicationId "com.amogh.reliefhackathon"
+        applicationId 'com.amogh.reliefhackathon'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
     }
     signingConfigs {
         debug {
@@ -149,7 +149,6 @@ android {
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
-    implementation 'com.google.firebase:firebase-messaging:23.3.1'
     implementation("com.facebook.react:react-android")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
@@ -176,4 +175,5 @@ dependencies {
         implementation jscFlavor
     }
 }
-  apply plugin: 'com.google.gms.google-services'
+
+apply plugin: 'com.google.gms.google-services'

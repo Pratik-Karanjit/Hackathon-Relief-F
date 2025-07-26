@@ -13,7 +13,6 @@ import { registerForPushNotificationsAsync } from './utils/notifications';
 
 const Stack = createNativeStackNavigator();
 
-// Optional: How notifications are handled in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

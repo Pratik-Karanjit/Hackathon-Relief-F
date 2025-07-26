@@ -1,5 +1,5 @@
 {
-  "name": "MyExpoApp", 
+  "name": "MyExpoApp",
   "expo": {
     "name": "MyExpoApp",
     "slug": "MyExpoApp",
@@ -15,7 +15,13 @@
     },
     "plugins": [
       "@react-native-firebase/app",
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,
@@ -30,12 +36,6 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.yourcompany.myexpoapp",
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyBP5RD1x9CfsGlNKjgri6Lc6h68jLI8xNk"
-        }
       }
     },
     "web": {
@@ -45,14 +45,6 @@
       "eas": {
         "projectId": "8637e4b3-e94e-42d0-a420-3c0fcbffdfa9"
       }
-    },
-    "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
-        }
-      ]
-    ]
+    }
   }
 }
