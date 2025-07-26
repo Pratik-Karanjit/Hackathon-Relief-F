@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 
 export default function RegisterPage({ navigation }) {
+    const [userName, setUserName] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
@@ -55,6 +56,13 @@ export default function RegisterPage({ navigation }) {
                             <Text style={styles.title}>Create Account</Text>
                             <Text style={styles.subtitle}>Sign up to get started</Text>
 
+                            <TextInput
+                                style={[styles.input, styles.userNameInput]}
+                                placeholder="User Name"
+                                value={userName}
+                                onChangeText={setUserName}
+                                autoCapitalize="words"
+                            />
                             <View style={styles.nameContainer}>
                                 <TextInput
                                     style={[styles.input, styles.nameInput]}
@@ -179,6 +187,10 @@ const styles = StyleSheet.create({
     nameContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 15,
+    },
+    userNameInput: {
+        flex: 1,
         marginBottom: 15,
     },
     nameInput: {

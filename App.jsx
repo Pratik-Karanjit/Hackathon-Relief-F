@@ -7,11 +7,45 @@ import HomePage from "./components/Users/HomePage";
 import RegisterPage from "./components/Auth/RegisterPage";
 import UserBottomTabNavigator from "./components/Users/UserBottomTabNavigator";
 import AdminBottomTabNavigator from "./components/Admin/AdminBottomTabNavigator";
+import * as Notifications from 'expo-notifications';
+import { useEffect, useRef } from 'react';
+import { registerForPushNotificationsAsync } from './utils/notifications';
 
 const Stack = createNativeStackNavigator();
 
+// Optional: How notifications are handled in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
+
 export default function App() {
   const userRole = "user";
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then(token => {
+      console.log('📲 FCM Token:', token);
+    });
+
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('📥 Notification Received:', notification);
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('👆 Notification Clicked:', response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -28,6 +62,7 @@ export default function App() {
           <Stack.Screen name="UserTabs" component={UserBottomTabNavigator} />
         )}
       </Stack.Navigator>
+      <StatusBar style="auto" />
     </NavigationContainer>
   );
 }
