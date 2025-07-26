@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "left",
+    marginLeft: 4,
   },
   field: {
     marginBottom: 15,

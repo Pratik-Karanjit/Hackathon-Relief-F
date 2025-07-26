@@ -11,7 +11,7 @@ import AdminBottomTabNavigator from "./components/Admin/AdminBottomTabNavigator"
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const userRole = "admin";
+  const userRole = "user";
   return (
     <NavigationContainer>
       <Stack.Navigator

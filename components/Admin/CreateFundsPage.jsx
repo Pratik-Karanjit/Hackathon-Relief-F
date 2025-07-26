@@ -103,9 +103,10 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#333",
+    marginLeft: 4,
   },
   label: {
     fontSize: 14,
