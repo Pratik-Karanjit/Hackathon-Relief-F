@@ -73,7 +73,7 @@ export default function ProfilePage() {
       {renderToggle("Can Volunteer", canVolunteer, () =>
         setCanVolunteer(!canVolunteer)
       )}
-      {renderToggle("Can Donate", canDonate, () => setCanDonate(!canDonate))}
+
     </ScrollView>
   );
 }

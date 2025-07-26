@@ -11,6 +11,8 @@ import {
   Alert,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import MapView, { Marker } from 'react-native-maps';
+import { Constants } from '../../constants';
 
 export default function UserViewDetails({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -19,21 +21,31 @@ export default function UserViewDetails({ navigation }) {
 
   // Dummy data
   const incident = {
-    userName: "John Doe",
-    postedTime: "2 hours ago",
-    title: "Flood in Downtown Area",
-    urgency: "High",
-    location: "123 Main Street, Downtown",
-    incidentTime: "10:30 AM",
-    incidentDate: "July 25, 2025",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    images: [
-      "https://picsum.photos/400/300",
-      "https://picsum.photos/400/301",
-      "https://picsum.photos/400/302",
-    ],
-  };
+  incidentId: 1,
+  title: "Flood in Bhaktapur",
+  longitude: 85.429,
+  latitude: 27.672,
+  urgencyLevel: "HIGH",
+  description: "River has overflowed and flooded homes near the main road.",
+  organizationType: "POLICE",
+  incidentDate: "2025-07-26T10:30:00",
+  listedDate: "2025-07-26T13:49:21.004848",
+  images: [
+    {
+      imagePath: "https://res.cloudinary.com/deytqgusq/image/upload/v1753517062/incidents/smk35mfftdw2vxy3bfec.jpg",
+      imageType: "jpg"
+    },
+    {
+      imagePath: "https://res.cloudinary.com/deytqgusq/image/upload/v1753517063/incidents/s9jbnsois6oufcvdjnhq.jpg",
+      imageType: "jpg"
+    }
+  ],
+  uploader: {
+    userId: 1,
+    firstName: "Amogh",
+    lastName: "Bajracharya"
+  }
+};
 
   // Donation data
   const donationData = {
@@ -84,15 +96,15 @@ export default function UserViewDetails({ navigation }) {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
+        <View style={styles.headerLeft}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: "center" }}>
-          <Text style={styles.headerTitle}>Incident Report</Text>
-        </View>
+        <Text style={styles.headerTitle}>Incident Report</Text>
+      </View>
         <TouchableOpacity onPress={() => setShowDropdown(!showDropdown)}>
           <Ionicons name="ellipsis-vertical" size={24} color="#333" />
         </TouchableOpacity>
@@ -135,25 +147,25 @@ export default function UserViewDetails({ navigation }) {
             styles.urgencyPill,
             {
               backgroundColor:
-                incident.urgency === "High"
+                incident.urgencyLevel === "HIGH"
                   ? "#ff4444"
-                  : incident.urgency === "Medium"
+                  : incident.urgencyLevel === "MEDIUM"
                     ? "#ffbb33"
                     : "#00C851",
             },
           ]}
         >
-          <Text style={styles.urgencyText}>{incident.urgency}</Text>
+          <Text style={styles.urgencyText}>{incident.urgencyLevel}</Text>
         </View>
 
         <View style={styles.detailsRow}>
-          <View style={styles.locationContainer}>
-            <Ionicons name="location" size={20} color="#666" />
-            <Text style={styles.locationText}>{incident.location}</Text>
-          </View>
           <View style={styles.timeContainer}>
             <Text style={styles.timeText}>
-              {incident.incidentTime}, {incident.incidentDate}
+              {new Date(incident.incidentDate).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              })}, {new Date(incident.incidentDate).toLocaleDateString()}
             </Text>
           </View>
         </View>
@@ -161,17 +173,37 @@ export default function UserViewDetails({ navigation }) {
         <Text style={styles.descriptionTitle}>Description</Text>
         <Text style={styles.description}>{incident.description}</Text>
 
-        <Text style={styles.imagesTitle}>Images</Text>
+       <Text style={styles.imagesTitle}>Images</Text>
         <ScrollView
           horizontal
           style={styles.imageScroll}
           showsHorizontalScrollIndicator={false}
         >
-          {incident.images.map((uri, index) => (
-            <Image key={index} source={{ uri }} style={styles.image} />
+          {incident.images.map((img, index) => (
+            <Image key={index} source={{ uri: img.imagePath }} style={styles.image} />
           ))}
         </ScrollView>
-
+        {/* Add Map Section */}
+        <Text style={styles.mapTitle}>Location</Text>
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: incident.latitude,
+              longitude: incident.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }}
+          >
+            <Marker
+              coordinate={{
+                latitude: incident.latitude,
+                longitude: incident.longitude,
+              }}
+              title={incident.title}
+            />
+          </MapView>
+        </View>
         {/* Donate Button */}
         <TouchableOpacity
           style={styles.donateButton}
@@ -305,6 +337,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 50,
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -312,8 +345,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   backButton: {
     marginRight: 16,
+    padding: 4,
+  },
+  headerTitle:{
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
   },
   headerContent: {
     flex: 1,
@@ -366,9 +409,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
+  mapTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 12,
+  },
+  mapContainer: {
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  map: {
+    flex: 1,
+  },
   timeContainer: {
     flex: 1,
-    alignItems: "flex-end",
+    alignItems: "flex-start", // Changed from flex-end
   },
   timeText: {
     fontSize: 14,

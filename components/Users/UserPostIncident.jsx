@@ -8,6 +8,7 @@ import {
   Image,
   Platform,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -30,17 +31,53 @@ export default function UserPostIncident({ navigation }) {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const handleImagePick = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+  const handleImagePick = () => {
+    Alert.alert(
+      "Add Image",
+      "Choose an option",
+      [
+        {
+          text: "Camera",
+          onPress: async () => {
+            const permission = await ImagePicker.requestCameraPermissionsAsync();
+            if (permission.granted) {
+              const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1,
+              });
 
-    if (!result.canceled) {
-      setImages([...images, result.assets[0].uri]);
-    }
+              if (!result.canceled) {
+                setImages([...images, result.assets[0].uri]);
+              }
+            } else {
+              Alert.alert("Permission Denied", "Camera access is required to take photos.");
+            }
+          },
+        },
+        {
+          text: "Gallery",
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [4, 3],
+              quality: 1,
+            });
+
+            if (!result.canceled) {
+              setImages([...images, result.assets[0].uri]);
+            }
+          },
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   const handleLocationChange = async (type) => {
@@ -64,14 +101,7 @@ export default function UserPostIncident({ navigation }) {
     >
       <View style={styles.fullHeight}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#333" />
-          </TouchableOpacity>
-
-          <Text style={styles.headerText}>Incident Report</Text>
+          <Text style={styles.headerText}>Post Incident</Text>
         </View>
 
         <View style={styles.formContainer}>
@@ -264,17 +294,15 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingBottom: 16,
-    backgroundColor: "#fff",
+    paddingHorizontal: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 8,
   },
   headerText: {
     fontSize: 22,
