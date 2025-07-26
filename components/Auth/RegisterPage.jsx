@@ -11,8 +11,10 @@ import {
     Alert,
     SafeAreaView,
 } from 'react-native';
+import api from '../../services/api'; // Import the api interceptor
 
 export default function RegisterPage({ navigation }) {
+    const [username, setUsername] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
@@ -20,23 +22,111 @@ export default function RegisterPage({ navigation }) {
     const [address, setAddress] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleRegister = () => {
+    const handleRegister = async () => {
+        // Validation
         if (!firstName || !lastName || !email || !contact || !address || !password || !confirmPassword) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
+
         if (password !== confirmPassword) {
             Alert.alert('Error', 'Passwords do not match');
             return;
         }
-        Alert.alert('Success', 'Registration functionality to be implemented');
+
+        if (password.length < 6) {
+            Alert.alert('Error', 'Password must be at least 6 characters long');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert('Error', 'Please enter a valid email address');
+            return;
+        }
+
+        if (contact.length < 10) {
+            Alert.alert('Error', 'Please enter a valid contact number');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const userData = {
+                username,
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                email: email.trim().toLowerCase(),
+                contact: contact.trim(),
+                address: address.trim(),
+                password: password,
+                confirmPassword: confirmPassword
+            };
+
+            // Use the api interceptor - no need to specify baseURL
+            const response = await api.post('/user/signup/user', userData);
+
+            if (response.status === 200 || response.status === 201) {
+                Alert.alert(
+                    'Success',
+                    'Account created successfully! Please login.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => navigateToLogin()
+                        }
+                    ]
+                );
+
+                // Clear form
+                setUsername('');
+                setFirstName('');
+                setLastName('');
+                setEmail('');
+                setContact('');
+                setAddress('');
+                setPassword('');
+                setConfirmPassword('');
+            }
+
+        } catch (error) {
+            let errorMessage = 'Registration failed. Please try again.';
+
+            if (error.response) {
+                const status = error.response.status;
+                const data = error.response.data;
+
+                if (status === 400) {
+                    errorMessage = data.message || 'Invalid input data. Please check your information.';
+                } else if (status === 409) {
+                    errorMessage = 'An account with this email already exists.';
+                } else if (status === 422) {
+                    errorMessage = data.message || 'Please check your input data.';
+                } else if (status >= 500) {
+                    errorMessage = 'Server error. Please try again later.';
+                } else {
+                    errorMessage = data.message || `Registration failed (${status})`;
+                }
+            } else if (error.request) {
+                errorMessage = 'Network error. Please check your internet connection.';
+            } else if (error.code === 'ECONNABORTED') {
+                errorMessage = 'Request timeout. Please try again.';
+            }
+
+            Alert.alert('Registration Failed', errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const navigateToLogin = () => {
         navigation.navigate('Login');
     };
 
+    // ... rest of your component JSX remains the same
     return (
         <SafeAreaView style={styles.safeArea}>
             <KeyboardAvoidingView
@@ -54,6 +144,14 @@ export default function RegisterPage({ navigation }) {
                         <View style={styles.formContainer}>
                             <Text style={styles.title}>Create Account</Text>
                             <Text style={styles.subtitle}>Sign up to get started</Text>
+                            <TextInput
+                                style={[styles.input, styles.usernameInput]}
+                                placeholder="User Name"
+                                value={username}
+                                onChangeText={setUsername}
+                                autoCapitalize="words"
+                                editable={!isLoading}
+                            />
 
                             <View style={styles.nameContainer}>
                                 <TextInput
@@ -62,6 +160,7 @@ export default function RegisterPage({ navigation }) {
                                     value={firstName}
                                     onChangeText={setFirstName}
                                     autoCapitalize="words"
+                                    editable={!isLoading}
                                 />
                                 <View style={styles.inputSpacing} />
                                 <TextInput
@@ -70,6 +169,7 @@ export default function RegisterPage({ navigation }) {
                                     value={lastName}
                                     onChangeText={setLastName}
                                     autoCapitalize="words"
+                                    editable={!isLoading}
                                 />
                             </View>
 
@@ -81,6 +181,7 @@ export default function RegisterPage({ navigation }) {
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoCorrect={false}
+                                editable={!isLoading}
                             />
 
                             <TextInput
@@ -89,12 +190,15 @@ export default function RegisterPage({ navigation }) {
                                 value={contact}
                                 onChangeText={setContact}
                                 keyboardType="phone-pad"
+                                editable={!isLoading}
                             />
+
                             <TextInput
                                 style={styles.input}
                                 placeholder="Address"
                                 value={address}
                                 onChangeText={setAddress}
+                                editable={!isLoading}
                             />
 
                             <TextInput
@@ -104,6 +208,7 @@ export default function RegisterPage({ navigation }) {
                                 onChangeText={setPassword}
                                 secureTextEntry
                                 autoCapitalize="none"
+                                editable={!isLoading}
                             />
 
                             <TextInput
@@ -113,16 +218,28 @@ export default function RegisterPage({ navigation }) {
                                 onChangeText={setConfirmPassword}
                                 secureTextEntry
                                 autoCapitalize="none"
+                                editable={!isLoading}
                             />
 
-                            <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-                                <Text style={styles.registerButtonText}>Sign Up</Text>
+                            <TouchableOpacity
+                                style={[styles.registerButton, isLoading && styles.disabledButton]}
+                                onPress={handleRegister}
+                                disabled={isLoading}
+                            >
+                                <Text style={styles.registerButtonText}>
+                                    {isLoading ? 'Creating Account...' : 'Sign Up'}
+                                </Text>
                             </TouchableOpacity>
 
                             <View style={styles.loginContainer}>
                                 <Text style={styles.loginText}>Already have an account? </Text>
-                                <TouchableOpacity onPress={navigateToLogin}>
-                                    <Text style={styles.loginLink}>Sign In</Text>
+                                <TouchableOpacity
+                                    onPress={navigateToLogin}
+                                    disabled={isLoading}
+                                >
+                                    <Text style={[styles.loginLink, isLoading && styles.disabledText]}>
+                                        Sign In
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -180,6 +297,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 15,
+    },
+    usernameInput: {
+        flex: 1,
+        marginBottom: 14,
     },
     nameInput: {
         flex: 1,

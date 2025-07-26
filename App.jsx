@@ -52,7 +52,7 @@ export default function App() {
           screenOptions={{ headerShown: false }}
         >
           {/* <Stack.Screen name="Login" component={LoginPage} /> */}
-          {/* <Stack.Screen name="Register" component={RegisterPage} /> */}
+          <Stack.Screen name="Register" component={RegisterPage} />
           {/* <Stack.Screen name="Home" component={BottomTabNavigator} /> */}
 
           {userRole === "admin" ? (
@@ -63,7 +63,7 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </PaperProvider>
-    
+
   );
 }
 
