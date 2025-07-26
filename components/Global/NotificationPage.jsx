@@ -44,13 +44,8 @@ export default function NotificationPage() {
   const Header = () => (
     <View>
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>LOGO</Text>
-          </View>
-        </View>
+        <Text style={styles.headerText}>Notifications</Text>
       </View>
-
       <View style={styles.clearButtonContainer}>
         <TouchableOpacity onPress={handleClearAll} style={styles.clearButton}>
           <Text style={styles.clearButtonText}>Clear All</Text>
@@ -81,33 +76,23 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
+    backgroundColor: "#fff",
     paddingTop: 50,
     paddingBottom: 16,
     paddingHorizontal: 16,
     marginHorizontal: -16,
     marginBottom: 8,
-    backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 8,
   },
-  logoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#ccc",
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
+  headerText: {
+    fontSize: 22,
     fontWeight: "bold",
-    fontSize: 12,
+    textAlign: "left",
+    marginLeft: 4,
   },
   clearButtonContainer: {
     alignItems: "flex-end",

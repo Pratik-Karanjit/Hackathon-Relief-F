@@ -5,15 +5,20 @@ import RegisterPage from "./components/Auth/RegisterPage";
 // import HomePage from "./components/Global/HomePage";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { registerForPushNotificationsAsync } from "./utils/notifications.js";
 import UserBottomTabNavigator from "./components/Users/UserBottomTabNavigator.jsx";
 import AdminBottomTabNavigator from "./components/Admin/AdminBottomTabNavigator.jsx";
 import StaticMap from "./components/Users/StaticMap.js";
+import OfflinePage from "./components/Global/OfflinePage";
+import { PaperProvider } from "react-native-paper";
+import { theme } from "./MyThemes.js";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [isOffline, setIsOffline] = useState(false);
+
   useEffect(() => {
     const setupNotifications = async () => {
       try {
@@ -27,24 +32,39 @@ export default function App() {
     setupNotifications();
   }, []);
 
-  const userRole = "user";
+  const userRole = "admin";
+
+  // useEffect(() => {
+  //   const unsubscribe = NetInfo.addEventListener((state) => {
+  //     setIsOffline(!state.isConnected);
+  //   });
+
+  //   return () => unsubscribe();
+  // }, []);
+
+  if (isOffline) {
+    return <OfflinePage />;
+  }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        // initialRouteName="Login"
-        screenOptions={{ headerShown: false }}
-      >
-        <Stack.Screen name="Map" component={UserBottomTabNavigator} />
-
-        {userRole === "admin" ? (
-          <Stack.Screen name="AdminTabs" component={AdminBottomTabNavigator} />
-        ) : (
-          <Stack.Screen name="UserTabs" component={UserBottomTabNavigator} />
-        )}
-      </Stack.Navigator>
-      <StatusBar style="auto" />
-    </NavigationContainer>
+    <PaperProvider theme={theme}>
+      <NavigationContainer>
+        <Stack.Navigator
+          // initialRouteName="Login"
+          screenOptions={{ headerShown: false }}
+        >
+          {userRole === "admin" ? (
+            <Stack.Screen
+              name="AdminTabs"
+              component={AdminBottomTabNavigator}
+            />
+          ) : (
+            <Stack.Screen name="UserTabs" component={UserBottomTabNavigator} />
+          )}
+        </Stack.Navigator>
+        <StatusBar style="auto" />
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
 

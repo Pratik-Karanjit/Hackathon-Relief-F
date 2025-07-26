@@ -81,26 +81,7 @@ export default function AdminHomePage({ navigation }) {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>ADMIN</Text>
-          </View>
-        </View>
-
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color="#666"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search..."
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-        </View>
+        <Text style={styles.headerText}>Relief</Text>
       </View>
 
       <View style={styles.contentContainer}>
@@ -185,40 +166,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 8,
   },
-  logoContainer: {
-    marginRight: 12,
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#dc3545",
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoText: {
-    color: "white",
-    fontSize: 12,
+  headerText: {
+    fontSize: 22,
     fontWeight: "bold",
-  },
-  searchContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
     color: "#333",
+    marginLeft: 4,
   },
   contentContainer: {
     padding: 16,
