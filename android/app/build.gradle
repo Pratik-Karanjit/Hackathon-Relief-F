@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.myexpoapp"
+    namespace "com.amogh.reliefhackathon"
     defaultConfig {
-        applicationId "com.myexpoapp"
+        applicationId "com.amogh.reliefhackathon"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -149,6 +149,7 @@ android {
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
+    implementation 'com.google.firebase:firebase-messaging:23.3.1'
     implementation("com.facebook.react:react-android")
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
@@ -175,3 +176,4 @@ dependencies {
         implementation jscFlavor
     }
 }
+  apply plugin: 'com.google.gms.google-services'

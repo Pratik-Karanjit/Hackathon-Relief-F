@@ -1,4 +1,5 @@
 {
+  "name": "MyExpoApp", 
   "expo": {
     "name": "MyExpoApp",
     "slug": "MyExpoApp",
@@ -12,12 +13,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.amogh.reliefhackathon",
-      "googleServicesFile": "./android/app/google-services.json",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
