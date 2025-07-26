@@ -18,6 +18,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isOffline, setIsOffline] = useState(false);
+  const userRole = "admin";
 
   useEffect(() => {
     const setupNotifications = async () => {
@@ -32,15 +33,28 @@ export default function App() {
     setupNotifications();
   }, []);
 
-  const userRole = "admin";
+  useEffect(() => {
+    const checkOnline = async () => {
+      try {
+        const response = await fetch("https://www.google.com/favicon.ico", {
+          method: "HEAD",
+        });
+        return response.ok;
+      } catch {
+        return false;
+      }
+    };
 
-  // useEffect(() => {
-  //   const unsubscribe = NetInfo.addEventListener((state) => {
-  //     setIsOffline(!state.isConnected);
-  //   });
+    const verify = async () => {
+      const online = await checkOnline();
+      setIsOffline(!online);
+    };
 
-  //   return () => unsubscribe();
-  // }, []);
+    verify(); // run once immediately
+    const interval = setInterval(verify, 5000); // repeat every 5s
+
+    return () => clearInterval(interval); // cleanup
+  }, []);
 
   if (isOffline) {
     return <OfflinePage />;
