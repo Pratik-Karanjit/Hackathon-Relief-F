@@ -8,10 +8,12 @@ import {
   Modal,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
-import api from '../../services/api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import api from "../../services/api";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 export default function ProfilePage({ navigation }) {
   const [user, setUser] = useState(null);
@@ -24,6 +26,8 @@ export default function ProfilePage({ navigation }) {
   const [error, setError] = useState(null);
   const [showUpdateButton, setShowUpdateButton] = useState(false);
 
+  const [userRole, setUserRole] = useState(null);
+
   useEffect(() => {
     fetchUserProfile();
   }, []);
@@ -32,22 +36,25 @@ export default function ProfilePage({ navigation }) {
     setIsLoading(true);
     setError(null);
 
+    const role = await AsyncStorage.getItem("role");
+    setUserRole(role);
+
     try {
       // Get userId from AsyncStorage
-      const userId = await AsyncStorage.getItem('userId');
+      const userId = await AsyncStorage.getItem("userId");
 
       if (!userId) {
-        setError('User ID not found. Please login again.');
+        setError("User ID not found. Please login again.");
         setIsLoading(false);
         return;
       }
 
-      console.log('Fetching profile for userId:', userId);
+      console.log("Fetching profile for userId:", userId);
 
       // Make API call using the interceptor
       const response = await api.get(`/user/profile/${userId}`);
 
-      console.log('Profile response:', response.data);
+      console.log("Profile response:", response.data);
 
       if (response.status === 200) {
         let userData = null;
@@ -61,19 +68,22 @@ export default function ProfilePage({ navigation }) {
           userData = response.data;
         }
 
-        console.log('Processed user data:', userData);
+        console.log("Processed user data:", userData);
         setUser(userData);
 
         // Set volunteer status based on the 'volunteer' field from response
         let volunteerStatus = false;
         if (userData.volunteer !== undefined) {
-          console.log('Setting volunteer status from API:', userData.volunteer);
+          console.log("Setting volunteer status from API:", userData.volunteer);
           volunteerStatus = userData.volunteer === true;
         } else if (userData.canVolunteer !== undefined) {
-          console.log('Setting volunteer status from canVolunteer field:', userData.canVolunteer);
+          console.log(
+            "Setting volunteer status from canVolunteer field:",
+            userData.canVolunteer
+          );
           volunteerStatus = userData.canVolunteer === true;
         } else {
-          console.log('No volunteer field found, defaulting to false');
+          console.log("No volunteer field found, defaulting to false");
           volunteerStatus = false;
         }
 
@@ -89,37 +99,36 @@ export default function ProfilePage({ navigation }) {
         }
 
         // Log the final states for debugging
-        console.log('Final volunteer status:', volunteerStatus);
-        console.log('Final donate status:', userData.canDonate === true);
+        console.log("Final volunteer status:", volunteerStatus);
+        console.log("Final donate status:", userData.canDonate === true);
       }
-
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
 
-      let errorMessage = 'Failed to load profile. Please try again.';
+      let errorMessage = "Failed to load profile. Please try again.";
 
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
 
         if (status === 401) {
-          errorMessage = 'Please login again to access your profile.';
+          errorMessage = "Please login again to access your profile.";
           await clearUserData();
         } else if (status === 403) {
-          errorMessage = 'You do not have permission to view this profile.';
+          errorMessage = "You do not have permission to view this profile.";
         } else if (status === 404) {
-          errorMessage = 'Profile not found.';
+          errorMessage = "Profile not found.";
         } else if (status >= 500) {
-          errorMessage = 'Server error. Please try again later.';
+          errorMessage = "Server error. Please try again later.";
         } else {
           errorMessage = data.message || errorMessage;
         }
       } else if (error.request) {
-        errorMessage = 'Network error. Please check your internet connection.';
+        errorMessage = "Network error. Please check your internet connection.";
       }
 
       setError(errorMessage);
-      Alert.alert('Error', errorMessage);
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -128,39 +137,42 @@ export default function ProfilePage({ navigation }) {
   const clearUserData = async () => {
     try {
       await AsyncStorage.multiRemove([
-        'userToken',
-        'userData',
-        'userId',
-        'refreshToken',
-        'userRole',
-        'loginResponse',
-        'fcmToken'
+        "userToken",
+        "userData",
+        "userId",
+        "refreshToken",
+        "userRole",
+        "loginResponse",
+        "fcmToken",
       ]);
-      console.log('User data cleared from AsyncStorage');
+      console.log("User data cleared from AsyncStorage");
     } catch (error) {
-      console.error('Error clearing user data:', error);
+      console.error("Error clearing user data:", error);
     }
   };
 
   const requestLocationPermission = async () => {
     try {
-      console.log('Requesting location permission...');
+      console.log("Requesting location permission...");
 
       let { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== 'granted') {
+      if (status !== "granted") {
         Alert.alert(
-          'Permission Denied',
-          'Location permission is required to update volunteer status. Please enable location access in your device settings.',
+          "Permission Denied",
+          "Location permission is required to update volunteer status. Please enable location access in your device settings.",
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Settings', onPress: () => Location.requestForegroundPermissionsAsync() }
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Settings",
+              onPress: () => Location.requestForegroundPermissionsAsync(),
+            },
           ]
         );
         return null;
       }
 
-      console.log('Location permission granted, getting current location...');
+      console.log("Location permission granted, getting current location...");
 
       let location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
@@ -168,18 +180,17 @@ export default function ProfilePage({ navigation }) {
         maximumAge: 60000,
       });
 
-      console.log('Current location:', location);
+      console.log("Current location:", location);
 
       return {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-
     } catch (error) {
-      console.error('Error getting location:', error);
+      console.error("Error getting location:", error);
       Alert.alert(
-        'Location Error',
-        'Failed to get your current location. Please ensure location services are enabled and try again.'
+        "Location Error",
+        "Failed to get your current location. Please ensure location services are enabled and try again."
       );
       return null;
     }
@@ -191,9 +202,9 @@ export default function ProfilePage({ navigation }) {
     setIsUpdating(true);
 
     try {
-      const userId = await AsyncStorage.getItem('userId');
+      const userId = await AsyncStorage.getItem("userId");
       if (!userId) {
-        Alert.alert('Error', 'User ID not found. Please login again.');
+        Alert.alert("Error", "User ID not found. Please login again.");
         return;
       }
 
@@ -202,21 +213,21 @@ export default function ProfilePage({ navigation }) {
 
       if (canVolunteer) {
         Alert.alert(
-          'Location Required',
-          'To enable volunteer status, we need to access your current location. This helps match you with nearby incidents.',
+          "Location Required",
+          "To enable volunteer status, we need to access your current location. This helps match you with nearby incidents.",
           [
             {
-              text: 'Cancel',
-              style: 'cancel',
+              text: "Cancel",
+              style: "cancel",
               onPress: () => {
                 // Reset volunteer status to original
                 setCanVolunteer(originalVolunteerStatus);
                 setShowUpdateButton(false);
                 setIsUpdating(false);
-              }
+              },
             },
             {
-              text: 'Allow Location',
+              text: "Allow Location",
               onPress: async () => {
                 const location = await requestLocationPermission();
                 if (location) {
@@ -228,8 +239,8 @@ export default function ProfilePage({ navigation }) {
                   setShowUpdateButton(false);
                   setIsUpdating(false);
                 }
-              }
-            }
+              },
+            },
           ]
         );
         return;
@@ -247,53 +258,61 @@ export default function ProfilePage({ navigation }) {
             userId: parseInt(userId, 10),
           };
 
-          console.log('Updating volunteer status with data:', updateData);
+          console.log("Updating volunteer status with data:", updateData);
 
-          const response = await api.put('/user/updateVolunteerStatus', updateData);
+          const response = await api.put(
+            "/user/updateVolunteerStatus",
+            updateData
+          );
 
-          console.log('Update response:', response.data);
+          console.log("Update response:", response.data);
 
           if (response.status === 200) {
             Alert.alert(
-              'Success',
-              `Volunteer status ${canVolunteer ? 'enabled' : 'disabled'} successfully!`,
+              "Success",
+              `Volunteer status ${
+                canVolunteer ? "enabled" : "disabled"
+              } successfully!`,
               [
                 {
-                  text: 'OK',
+                  text: "OK",
                   onPress: () => {
                     setOriginalVolunteerStatus(canVolunteer);
                     setShowUpdateButton(false);
                     // Optionally refresh profile data
                     fetchUserProfile();
-                  }
-                }
+                  },
+                },
               ]
             );
           }
-
         } catch (updateError) {
-          console.error('Error updating volunteer status:', updateError);
+          console.error("Error updating volunteer status:", updateError);
 
-          let errorMessage = 'Failed to update volunteer status. Please try again.';
+          let errorMessage =
+            "Failed to update volunteer status. Please try again.";
 
           if (updateError.response) {
             const status = updateError.response.status;
             const data = updateError.response.data;
 
             if (status === 401) {
-              errorMessage = 'Please login again to update your volunteer status.';
+              errorMessage =
+                "Please login again to update your volunteer status.";
             } else if (status === 403) {
-              errorMessage = 'You do not have permission to update volunteer status.';
+              errorMessage =
+                "You do not have permission to update volunteer status.";
             } else if (status >= 500) {
-              errorMessage = 'Server error. Please try again later.';
+              errorMessage = "Server error. Please try again later.";
             } else {
               errorMessage = data.message || errorMessage;
             }
           } else if (updateError.request) {
-            errorMessage = 'Network error. Please check your internet connection.';
+            errorMessage =
+              "Network error. Please check your internet connection.";
           }
 
-          Alert.alert('Update Failed', errorMessage);
+          Alert.alert("Update Failed", errorMessage);
 
           // Reset volunteer status to original on failure
           setCanVolunteer(originalVolunteerStatus);
@@ -302,10 +321,9 @@ export default function ProfilePage({ navigation }) {
           setIsUpdating(false);
         }
       }
-
     } catch (error) {
-      console.error('Error in updateVolunteerStatusOnBackend:', error);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      console.error("Error in updateVolunteerStatusOnBackend:", error);
+      Alert.alert("Error", "An unexpected error occurred. Please try again.");
       setCanVolunteer(originalVolunteerStatus);
       setShowUpdateButton(false);
       setIsUpdating(false);
@@ -323,54 +341,46 @@ export default function ProfilePage({ navigation }) {
       setShowUpdateButton(false);
     }
 
-    console.log('Volunteer status toggled to:', newStatus);
+    console.log("Volunteer status toggled to:", newStatus);
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Confirm Logout',
-      'Are you sure you want to logout?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsLoading(true);
+    Alert.alert("Confirm Logout", "Are you sure you want to logout?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setIsLoading(true);
 
-              await clearUserData();
+            await clearUserData();
 
-              Alert.alert(
-                'Success',
-                'Logged out successfully',
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      if (navigation && navigation.navigate) {
-                        navigation.reset({
-                          index: 0,
-                          routes: [{ name: 'Login' }],
-                        });
-                      }
-                    }
+            Alert.alert("Success", "Logged out successfully", [
+              {
+                text: "OK",
+                onPress: () => {
+                  if (navigation && navigation.navigate) {
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: "Login" }],
+                    });
                   }
-                ]
-              );
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout properly');
-            } finally {
-              setIsLoading(false);
-            }
-          },
+                },
+              },
+            ]);
+          } catch (error) {
+            console.error("Logout error:", error);
+            Alert.alert("Error", "Failed to logout properly");
+          } finally {
+            setIsLoading(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleRetry = () => {
@@ -379,17 +389,14 @@ export default function ProfilePage({ navigation }) {
 
   const updateDonateStatus = async (newStatus) => {
     try {
-      const userId = await AsyncStorage.getItem('userId');
+      const userId = await AsyncStorage.getItem("userId");
       if (!userId) return;
 
-      // You can add an API call here to update donate status on backend
-      // await api.put(`/user/profile/${userId}/donate-status`, { canDonate: newStatus });
-
       setCanDonate(newStatus);
-      console.log('Donate status updated:', newStatus);
+      console.log("Donate status updated:", newStatus);
     } catch (error) {
-      console.error('Error updating donate status:', error);
-      Alert.alert('Error', 'Failed to update donate status');
+      console.error("Error updating donate status:", error);
+      Alert.alert("Error", "Failed to update donate status");
     }
   };
 
@@ -494,36 +501,55 @@ export default function ProfilePage({ navigation }) {
       </View>
       {renderMenu()}
 
+      {userRole === "ORGANIZATION" && (
+        <View style={styles.imageContainer}>
+          {user?.organizationImage?.imagePath ? (
+            <Image
+              source={{ uri: user.organizationImage.imagePath }}
+              style={styles.image}
+            />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Ionicons name="person-circle-outline" size={80} color="#666" />
+              <Text style={styles.imagePlaceholderText}>No Profile Image</Text>
+            </View>
+          )}
+        </View>
+      )}
+
       <View style={styles.field}>
         <Text style={styles.label}>Full Name</Text>
         <Text style={styles.value}>
           {user.firstName && user.lastName
             ? `${user.firstName} ${user.lastName}`
-            : user.fullName || user.name || 'N/A'}
+            : user.fullName || user.name || "N/A"}
         </Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.label}>Username</Text>
-        <Text style={styles.value}>{user.username || 'N/A'}</Text>
+        <Text style={styles.value}>{user.username || "N/A"}</Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.label}>Email</Text>
-        <Text style={styles.value}>{user.email || 'N/A'}</Text>
+        <Text style={styles.value}>{user.email || "N/A"}</Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.label}>Contact Number</Text>
-        <Text style={styles.value}>{user.contact || user.phoneNumber || 'N/A'}</Text>
+        <Text style={styles.value}>
+          {user.contact || user.phoneNumber || "N/A"}
+        </Text>
       </View>
 
       <View style={styles.field}>
         <Text style={styles.label}>Address</Text>
-        <Text style={styles.value}>{user.address || 'N/A'}</Text>
+        <Text style={styles.value}>{user.address || "N/A"}</Text>
       </View>
 
-      {renderToggle("Can Volunteer", canVolunteer, handleVolunteerToggle)}
+      {userRole === "USER" &&
+        renderToggle("Can Volunteer", canVolunteer, handleVolunteerToggle)}
 
       {/* Update Button */}
       {showUpdateButton && (
@@ -539,8 +565,6 @@ export default function ProfilePage({ navigation }) {
           )}
         </TouchableOpacity>
       )}
-
-
     </ScrollView>
   );
 }
@@ -555,20 +579,20 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
     padding: 20,
   },
   errorText: {
@@ -577,21 +601,46 @@ const styles = StyleSheet.create({
   },
   errorMessage: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
+  imageContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+  },
+
+  image: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+
+  imagePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#eee",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  imagePlaceholderText: {
+    marginTop: 8,
+    color: "#666",
+  },
+
   header: {
     backgroundColor: "#fff",
     paddingTop: 50,
@@ -604,9 +653,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   menuButton: {
     padding: 8,
@@ -614,21 +663,21 @@ const styles = StyleSheet.create({
   },
   menuDots: {
     fontSize: 24,
-    color: '#333',
-    fontWeight: 'bold',
+    color: "#333",
+    fontWeight: "bold",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   menuContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 90,
     right: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     padding: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -643,7 +692,7 @@ const styles = StyleSheet.create({
   },
   menuText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
   headerText: {
     fontSize: 22,
@@ -735,25 +784,25 @@ const styles = StyleSheet.create({
     left: 18,
   },
   updateButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   disabledButton: {
-    backgroundColor: '#6c757d',
+    backgroundColor: "#6c757d",
     opacity: 0.6,
   },
   updateButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
