@@ -14,7 +14,8 @@ import {
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MapView, { Marker } from "react-native-maps";
 import { Constants } from "../../constants";
-import api from '../../services/api';
+import api from "../../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function UserViewDetails({ navigation, route }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -44,7 +45,7 @@ export default function UserViewDetails({ navigation, route }) {
       setIncident(fallbackIncident);
       setIsLoading(false);
     } else {
-      setError('No incident ID provided');
+      setError("No incident ID provided");
       setIsLoading(false);
     }
   }, [incidentId]);
@@ -54,11 +55,11 @@ export default function UserViewDetails({ navigation, route }) {
     setError(null);
 
     try {
-      console.log('Fetching incident details for ID:', incidentId);
+      console.log("Fetching incident details for ID:", incidentId);
 
       const response = await api.get(`/incident/${incidentId}`);
 
-      console.log('Incident details response:', response.data);
+      console.log("Incident details response:", response.data);
 
       if (response.status === 200) {
         let incidentData = null;
@@ -72,43 +73,42 @@ export default function UserViewDetails({ navigation, route }) {
           incidentData = response.data;
         }
 
-        console.log('Processed incident data:', incidentData);
+        console.log("Processed incident data:", incidentData);
         setIncident(incidentData);
       }
-
     } catch (error) {
-      console.error('Error fetching incident details:', error);
+      console.error("Error fetching incident details:", error);
 
-      let errorMessage = 'Failed to load incident details. Please try again.';
+      let errorMessage = "Failed to load incident details. Please try again.";
 
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
 
         if (status === 401) {
-          errorMessage = 'Please login again to access incident details.';
+          errorMessage = "Please login again to access incident details.";
         } else if (status === 403) {
-          errorMessage = 'You do not have permission to view this incident.';
+          errorMessage = "You do not have permission to view this incident.";
         } else if (status === 404) {
-          errorMessage = 'Incident not found.';
+          errorMessage = "Incident not found.";
         } else if (status >= 500) {
-          errorMessage = 'Server error. Please try again later.';
+          errorMessage = "Server error. Please try again later.";
         } else {
           errorMessage = data.message || errorMessage;
         }
       } else if (error.request) {
-        errorMessage = 'Network error. Please check your internet connection.';
+        errorMessage = "Network error. Please check your internet connection.";
       }
 
       setError(errorMessage);
 
       // Use fallback incident data if available
       if (fallbackIncident) {
-        console.log('Using fallback incident data');
+        console.log("Using fallback incident data");
         setIncident(fallbackIncident);
         setError(null);
       } else {
-        Alert.alert('Error', errorMessage);
+        Alert.alert("Error", errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -228,9 +228,21 @@ export default function UserViewDetails({ navigation, route }) {
                     {
                       text: "Yes, Flag it",
                       style: "destructive",
-                      onPress: () => {
-                        // Handle flag post logic here
-                        Alert.alert("Flagged", "This post has been flagged.");
+                      onPress: async () => {
+                        try {
+                          const userId = await AsyncStorage.getItem("userId");
+                          const response = await api.post(
+                            `/incident/${incidentId}/flag`,
+                            null,
+                            { params: { userId } }
+                          );
+
+                          Alert.alert("Flagged", "This post has been flagged.");
+                          console.log("Flag response:", response.data);
+                        } catch (err) {
+                          console.error("Error flagging post:", err);
+                          Alert.alert("Error", "Failed to flag the post.");
+                        }
                       },
                     },
                   ]
@@ -244,7 +256,7 @@ export default function UserViewDetails({ navigation, route }) {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>{incident.title || 'Incident Report'}</Text>
+        <Text style={styles.title}>{incident.title || "Incident Report"}</Text>
 
         <View
           style={[
@@ -254,12 +266,14 @@ export default function UserViewDetails({ navigation, route }) {
                 incident.urgencyLevel === "HIGH"
                   ? "#ff4444"
                   : incident.urgencyLevel === "MEDIUM"
-                    ? "#ffbb33"
-                    : "#00C851",
+                  ? "#ffbb33"
+                  : "#00C851",
             },
           ]}
         >
-          <Text style={styles.urgencyText}>{incident.urgencyLevel || 'UNKNOWN'}</Text>
+          <Text style={styles.urgencyText}>
+            {incident.urgencyLevel || "UNKNOWN"}
+          </Text>
         </View>
 
         <View style={styles.detailsRow}>
@@ -275,7 +289,7 @@ export default function UserViewDetails({ navigation, route }) {
                   , {new Date(incident.incidentDate).toLocaleDateString()}
                 </>
               ) : (
-                'Date not available'
+                "Date not available"
               )}
             </Text>
           </View>
@@ -283,7 +297,7 @@ export default function UserViewDetails({ navigation, route }) {
 
         <Text style={styles.descriptionTitle}>Description</Text>
         <Text style={styles.description}>
-          {incident.description || 'No description available.'}
+          {incident.description || "No description available."}
         </Text>
 
         {/* Images Section */}
@@ -300,7 +314,9 @@ export default function UserViewDetails({ navigation, route }) {
                   key={index}
                   source={{ uri: img.imagePath }}
                   style={styles.image}
-                  onError={() => console.log('Failed to load image:', img.imagePath)}
+                  onError={() =>
+                    console.log("Failed to load image:", img.imagePath)
+                  }
                 />
               ))}
             </ScrollView>
@@ -448,40 +464,40 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 20,
   },
   errorText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
     marginTop: 16,
     marginBottom: 24,
   },
   retryButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 12,
   },
   retryButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 18,
@@ -527,15 +543,15 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 16,
     padding: 4,
-    backgroundColor: '#6c757d',
+    backgroundColor: "#6c757d",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
   },
   backButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerTitle: {
     fontSize: 20,
