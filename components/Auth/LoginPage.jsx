@@ -133,8 +133,8 @@ export default function LoginPage({ navigation }) {
                         await AsyncStorage.setItem('refreshToken', userData.refreshToken);
                     }
 
-                    if (userData.userRole) {
-                        await AsyncStorage.setItem('userRole', userData.userRole);
+                    if (userData.role) {
+                        await AsyncStorage.setItem('role', userData.role);
                     }
 
                     // Store the entire response if needed
@@ -152,7 +152,7 @@ export default function LoginPage({ navigation }) {
                         [
                             {
                                 text: 'OK',
-                                onPress: () => navigateToHome(userData.userRole || 'user')
+                                onPress: () => navigateToHome(userData.role || 'user')
                             }
                         ]
                     );
@@ -167,7 +167,7 @@ export default function LoginPage({ navigation }) {
 
                     // Still try to setup notifications even if storage fails
                     await setupNotifications();
-                    navigateToHome(userData.userRole || 'user');
+                    navigateToHome(userData.role || 'user');
                 }
             }
 
@@ -211,9 +211,8 @@ export default function LoginPage({ navigation }) {
         navigation.navigate('Register');
     };
 
-    const navigateToHome = (userRole = 'user') => {
-        // Navigate based on user role stored in AsyncStorage
-        if (userRole === 'admin') {
+    const navigateToHome = (role) => {
+        if (role === 'ADMIN') {
             navigation.navigate('AdminTabs');
         } else {
             navigation.navigate('UserTabs');

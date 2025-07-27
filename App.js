@@ -12,21 +12,75 @@ import StaticMap from "./components/Users/StaticMap.js";
 import OfflinePage from "./components/Global/OfflinePage";
 import { PaperProvider } from "react-native-paper";
 import { theme } from "./MyThemes.js";
+import { navigationRef } from "./utils/NavigationService.js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isOffline, setIsOffline] = useState(false);
 
-  const userRole = "user";
+    useEffect(() => {
+    checkForPendingNotifications();
+  }, []);
 
-  // useEffect(() => {
-  //   const unsubscribe = NetInfo.addEventListener((state) => {
-  //     setIsOffline(!state.isConnected);
-  //   });
+   const checkForPendingNotifications = async () => {
+    try {
+      // Check for initial notification (app was quit)
+      const initialNotification = await AsyncStorage.getItem('initialNotificationNavigation');
+      if (initialNotification) {
+        const { incidentId, timestamp } = JSON.parse(initialNotification);
+        
+        // Only navigate if notification is recent (within 5 minutes)
+        if (Date.now() - timestamp < 5 * 60 * 1000) {
+          setTimeout(() => {
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('UserTabs', {
+                screen: 'Home',
+                params: {
+                  screen: 'UserViewDetails',
+                  params: {
+                    incidentId: incidentId,
+                    fromNotification: true
+                  }
+                }
+              });
+            }
+          }, 2000); // Wait for navigation to be fully ready
+        }
+         await AsyncStorage.removeItem('initialNotificationNavigation');
+      }
+         const pendingNotification = await AsyncStorage.getItem('pendingNotificationNavigation');
+      if (pendingNotification) {
+        const { incidentId, timestamp } = JSON.parse(pendingNotification);
+        
+        // Only navigate if notification is recent
+        if (Date.now() - timestamp < 5 * 60 * 1000) {
+          setTimeout(() => {
+            if (navigationRef.isReady()) {
+              navigationRef.navigate('UserTabs', {
+                screen: 'Home',
+                params: {
+                  screen: 'UserViewDetails',
+                  params: {
+                    incidentId: incidentId,
+                    fromNotification: true
+                  }
+                }
+              });
+            }
+          }, 1000);
+        }
+        
+        // Clear the stored notification
+        await AsyncStorage.removeItem('pendingNotificationNavigation');
+      }
+    } catch (error) {
+      console.error('Error checking pending notifications:', error);
+    }
+  };
 
-  //   return () => unsubscribe();
-  // }, []);
+  // const userRole = "user";
 
   if (isOffline) {
     return <OfflinePage />;
@@ -34,21 +88,21 @@ export default function App() {
 
   return (
     <PaperProvider theme={theme}>
-      <NavigationContainer>
+       <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
 <Stack.Screen name="Login" component={LoginPage} /> 
           <Stack.Screen name="Register" component={RegisterPage} /> 
-          {userRole === "admin" ? (
+          {/* {userRole === "admin" ? ( */}
             <Stack.Screen
               name="AdminTabs"
               component={AdminBottomTabNavigator}
             />
-          ) : (
+          {/* ) : ( */}
             <Stack.Screen name="UserTabs" component={UserBottomTabNavigator} />
-          )}
+          {/* )} */}
         </Stack.Navigator>
         <StatusBar style="auto" />
       </NavigationContainer>

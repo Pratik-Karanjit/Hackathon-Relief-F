@@ -6,9 +6,9 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  Platform,
   TouchableOpacity,
   Alert,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -16,8 +16,9 @@ import * as ImagePicker from "expo-image-picker";
 import { MaterialIcons } from "@expo/vector-icons";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { Constants } from "../../constants";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import api from "../../services/api"; // Axios instance
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function UserPostIncident({ navigation }) {
   const [title, setTitle] = useState("");
@@ -30,89 +31,76 @@ export default function UserPostIncident({ navigation }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isDraggingMarker, setIsDraggingMarker] = useState(false);
 
   const handleImagePick = () => {
-    Alert.alert(
-      "Add Image",
-      "Choose an option",
-      [
-        {
-          text: "Camera",
-          onPress: async () => {
-            const permission =
-              await ImagePicker.requestCameraPermissionsAsync();
-            if (permission.granted) {
-              const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [4, 3],
-                quality: 1,
-              });
-              if (!result.canceled) {
-                setImages([...images, result.assets[0].uri]);
-              }
-            } else {
-              Alert.alert(
-                "Permission Denied",
-                "Camera access is required to take photos."
-              );
-            }
-          },
-        },
-        {
-          text: "Gallery",
-          onPress: async () => {
-            const result = await ImagePicker.launchImageLibraryAsync({
+    Alert.alert("Add Image", "Choose an option", [
+      {
+        text: "Camera",
+        onPress: async () => {
+          const permission = await ImagePicker.requestCameraPermissionsAsync();
+          if (permission.granted) {
+            const result = await ImagePicker.launchCameraAsync({
               mediaTypes: ImagePicker.MediaTypeOptions.Images,
               allowsEditing: true,
               aspect: [4, 3],
               quality: 1,
             });
-
             if (!result.canceled) {
               setImages([...images, result.assets[0].uri]);
             }
-          },
+          } else {
+            Alert.alert("Permission Denied", "Camera access is required.");
+          }
         },
-        {
-          text: "Cancel",
-          style: "cancel",
+      },
+      {
+        text: "Gallery",
+        onPress: async () => {
+          const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+          });
+
+          if (!result.canceled) {
+            setImages([...images, result.assets[0].uri]);
+          }
         },
-      ],
-      { cancelable: true }
-    );
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
   useEffect(() => {
-    const requestPermissionAndFetchLocation = async () => {
+    const getLocation = async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
-        const location = await Location.getCurrentPositionAsync({});
+        const loc = await Location.getCurrentPositionAsync({});
         const coords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
         };
         setCurrentLocation(coords);
-
         setSelectedLocation((prev) => prev || coords);
       } else {
         console.warn("Location permission not granted");
       }
     };
 
-    requestPermissionAndFetchLocation();
+    getLocation();
   }, []);
 
   const handleLocationChange = async (type) => {
     setLocationType(type);
-
     if (type === "current") {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
-        const location = await Location.getCurrentPositionAsync({});
+        const loc = await Location.getCurrentPositionAsync({});
         const coords = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
         };
         setCurrentLocation(coords);
         setSelectedLocation(coords);
@@ -123,12 +111,63 @@ export default function UserPostIncident({ navigation }) {
       setSelectedLocation(currentLocation);
     }
   };
-  console.log(locationType, "locationType");
 
-  console.log(currentLocation, "currentLocation");
-  console.log(selectedLocation, "slectedLocation");
+  const handleSubmit = async () => {
+    if (!title || !description || !selectedLocation) {
+      Alert.alert("Error", "Please fill in all required fields.");
+      return;
+    }
 
-  const [isDraggingMarker, setIsDraggingMarker] = useState(false);
+    const id = await AsyncStorage.getItem("userId");
+    console.log("User ID:", id);
+
+    const incidentData = {
+      title,
+      latitude: selectedLocation.latitude,
+      longitude: selectedLocation.longitude,
+      urgencyLevel: urgency.toUpperCase(),
+      description,
+      organizationType: "fire",
+      incidentDate: date.toISOString(),
+      uploaderId: id,
+    };
+
+    console.log(incidentData, "incidentData");
+
+    const formData = new FormData();
+
+    // Part 1: Add incident as a JSON string
+    formData.append("incident", JSON.stringify(incidentData));
+
+    // Part 2: Add images
+    images.forEach((uri, index) => {
+      const filename = uri.split("/").pop();
+      const type = `image/${filename.split(".").pop()}`;
+
+      formData.append("images", {
+        uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
+        name: filename,
+        type,
+      });
+    });
+
+    try {
+      await api.post("/incident/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      Alert.alert("Success", "Incident reported successfully!");
+      navigation.goBack();
+    } catch (error) {
+      console.error(
+        "Error submitting incident:",
+        error.response || error.message
+      );
+      Alert.alert("Error", "Failed to post incident.");
+    }
+  };
 
   return (
     <ScrollView
@@ -279,6 +318,7 @@ export default function UserPostIncident({ navigation }) {
             )}
           </View>
 
+          {/* Submit Button */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
@@ -289,39 +329,28 @@ export default function UserPostIncident({ navigation }) {
 
             <TouchableOpacity
               style={[styles.button, styles.postButton]}
-              onPress={() => {
-                const postData = {
-                  title,
-                  description,
-                  urgency,
-                  date: date.toISOString(),
-                  images,
-                  locationType,
-                  location: selectedLocation || currentLocation,
-                };
-
-                console.log("Submitted Report:", postData);
-              }}
+              onPress={handleSubmit}
             >
               <Text style={styles.postButtonText}>Post</Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {/* Time Picker */}
         {showTimePicker && (
           <DateTimePicker
             value={date}
             mode="time"
-            is24Hour={true}
+            is24Hour
             display="default"
             onChange={(event, selectedDate) => {
               setShowTimePicker(false);
-              if (selectedDate) {
-                setDate(selectedDate);
-              }
+              if (selectedDate) setDate(selectedDate);
             }}
           />
         )}
+
+        {/* Date Picker */}
         {showDatePicker && (
           <DateTimePicker
             value={date}
@@ -329,9 +358,7 @@ export default function UserPostIncident({ navigation }) {
             display="default"
             onChange={(event, selectedDate) => {
               setShowDatePicker(false);
-              if (selectedDate) {
-                setDate(selectedDate);
-              }
+              if (selectedDate) setDate(selectedDate);
             }}
           />
         )}
