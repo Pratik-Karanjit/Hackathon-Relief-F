@@ -22,9 +22,7 @@ export default function AdminBottomTabNavigator() {
             case "Add Org":
               iconName = focused ? "business" : "business-outline";
               break;
-            case "Notifications":
-              iconName = focused ? "notifications" : "notifications-outline";
-              break;
+
             case "Profile":
               iconName = focused ? "person" : "person-outline";
               break;
@@ -38,7 +36,6 @@ export default function AdminBottomTabNavigator() {
     >
       <Tab.Screen name="Home" component={AdminStackNavigator} />
       <Tab.Screen name="Add Org" component={AdminAddOrganization} />
-      <Tab.Screen name="Notifications" component={NotificationPage} />
       <Tab.Screen name="Profile" component={ProfilePage} />
     </Tab.Navigator>
   );

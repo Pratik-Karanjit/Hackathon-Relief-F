@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -15,8 +14,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../../services/api';
 
 export default function AdminHomePage({ navigation }) {
-  const [searchText, setSearchText] = useState("");
-
   // State for API data
   const [incidents, setIncidents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,12 +21,12 @@ export default function AdminHomePage({ navigation }) {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  // Filter parameters (same as HomePage.jsx)
+  // Filter parameters (simplified without search)
   const [filters, setFilters] = useState({
-    urgencyLevel: '', // '', 'LOW', 'MEDIUM', 'HIGH'
-    organizationType: '', // '', 'POLICE', 'FIRE', 'MEDICAL', etc.
-    dateFilter: '', // '', 'TODAY', 'WEEK', 'MONTH'
-    keyword: searchText,
+    urgencyLevel: '',
+    organizationType: '',
+    dateFilter: '',
+    keyword: '',
     page: 0,
     size: 10
   });
@@ -38,18 +35,6 @@ export default function AdminHomePage({ navigation }) {
   useEffect(() => {
     fetchIncidents();
   }, []);
-
-  // Update keyword filter when search text changes
-  useEffect(() => {
-    const delayedSearch = setTimeout(() => {
-      setFilters(prev => ({ ...prev, keyword: searchText, page: 0 }));
-      if (searchText.length > 2 || searchText.length === 0) {
-        fetchIncidents(0, true); // Reset to first page when searching
-      }
-    }, 500); // 500ms delay for search
-
-    return () => clearTimeout(delayedSearch);
-  }, [searchText]);
 
   const fetchIncidents = async (page = 0, isRefresh = false) => {
     if (isLoading && !isRefresh) return;
@@ -64,7 +49,7 @@ export default function AdminHomePage({ navigation }) {
         urgencyLevel: filters.urgencyLevel,
         organizationType: filters.organizationType,
         dateFilter: filters.dateFilter,
-        keyword: page === 0 ? searchText : filters.keyword, // Use current search text for new searches
+        keyword: filters.keyword,
         page: page,
         size: filters.size
       };
@@ -148,7 +133,6 @@ export default function AdminHomePage({ navigation }) {
   };
 
   const onRefresh = () => {
-    setSearchText(''); // Clear search on refresh
     fetchIncidents(0, true);
   };
 
@@ -191,7 +175,7 @@ export default function AdminHomePage({ navigation }) {
     }
   };
 
-  // Get flag count from incident data (you might need to adjust this based on your API response structure)
+  // Get flag count from incident data
   const getFlagCount = (incident) => {
     return incident.flagCount || incident.flags?.length || 0;
   };
@@ -208,27 +192,6 @@ export default function AdminHomePage({ navigation }) {
         <Text style={styles.headerText}>Relief - Admin</Text>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search incidents..."
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity
-              onPress={() => setSearchText('')}
-              style={styles.clearButton}
-            >
-              <Ionicons name="close-circle" size={20} color="#666" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
       <View style={styles.contentContainer}>
         {/* Loading state for initial load */}
         {isLoading && incidents.length === 0 ? (
@@ -239,9 +202,7 @@ export default function AdminHomePage({ navigation }) {
         ) : incidents.length === 0 ? (
           <View style={styles.noDataContainer}>
             <Ionicons name="document-outline" size={48} color="#ccc" />
-            <Text style={styles.noDataText}>
-              {searchText ? `No incidents found for "${searchText}"` : 'No incidents found'}
-            </Text>
+            <Text style={styles.noDataText}>No incidents found</Text>
             <TouchableOpacity style={styles.retryButton} onPress={() => fetchIncidents(0, true)}>
               <Text style={styles.retryButtonText}>Try Again</Text>
             </TouchableOpacity>
@@ -260,7 +221,7 @@ export default function AdminHomePage({ navigation }) {
                         ...incident,
                         id: incident.incidentId || incident.id,
                         title: incident.title,
-                        location: `${incident.latitude}, ${incident.longitude}`, // You might want to reverse geocode this
+                        location: `${incident.latitude}, ${incident.longitude}`,
                         urgency: incident.urgencyLevel?.toLowerCase() || 'medium',
                         description: incident.description,
                         time: formatDate(incident.incidentDate),
@@ -276,37 +237,24 @@ export default function AdminHomePage({ navigation }) {
                     ]}
                   >
                     <View style={styles.cardHeader}>
-                      <Text style={styles.cardTitle} numberOfLines={2}>
-                        {incident.title || 'Incident Report'}
-                      </Text>
+                      <View style={styles.titleContainer}>
+                        <Text style={styles.cardTitle} numberOfLines={2}>
+                          {incident.title || 'Incident Report'}
+                        </Text>
+                        <View
+                          style={[
+                            styles.urgencyBadge,
+                            { backgroundColor: getUrgencyColor(incident.urgencyLevel) },
+                          ]}
+                        >
+                          <Text style={styles.urgencyText}>
+                            {(incident.urgencyLevel || 'UNKNOWN').toUpperCase()}
+                          </Text>
+                        </View>
+                      </View>
                       <Text style={styles.cardTime}>
                         {formatDate(incident.incidentDate)}
                       </Text>
-                    </View>
-
-                    <View style={styles.locationRow}>
-                      <View style={styles.locationContainer}>
-                        <Ionicons
-                          name="location-outline"
-                          size={16}
-                          color="#666"
-                          style={styles.locationIcon}
-                        />
-                        <Text style={styles.locationText} numberOfLines={1}>
-                          {/* You might want to implement reverse geocoding here */}
-                          {incident.address || `${incident.latitude?.toFixed(4)}, ${incident.longitude?.toFixed(4)}` || 'Location not available'}
-                        </Text>
-                      </View>
-                      <View
-                        style={[
-                          styles.urgencyBadge,
-                          { backgroundColor: getUrgencyColor(incident.urgencyLevel) },
-                        ]}
-                      >
-                        <Text style={styles.urgencyText}>
-                          {(incident.urgencyLevel || 'UNKNOWN').toUpperCase()}
-                        </Text>
-                      </View>
                     </View>
 
                     <Text style={styles.cardContent} numberOfLines={3}>
@@ -387,32 +335,6 @@ const styles = StyleSheet.create({
     color: "#333",
     marginLeft: 4,
   },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
-  clearButton: {
-    marginLeft: 10,
-  },
   contentContainer: {
     padding: 16,
   },
@@ -468,40 +390,23 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
+    alignItems: "flex-start",
+    marginBottom: 14,
+  },
+  titleContainer: {
+    flex: 1,
+    marginRight: 8,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#1a1a1a",
-    flex: 1,
-    marginRight: 8,
+    marginBottom: 8,
   },
   cardTime: {
     fontSize: 12,
     color: "#6c757d",
     fontWeight: "500",
-  },
-  locationRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-  },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-  },
-  locationIcon: {
-    marginRight: 6,
-  },
-  locationText: {
-    fontSize: 14,
-    color: "#495057",
-    fontWeight: "500",
-    flex: 1,
   },
   urgencyBadge: {
     paddingHorizontal: 10,
@@ -509,6 +414,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "flex-start",
   },
   urgencyText: {
     fontSize: 10,
