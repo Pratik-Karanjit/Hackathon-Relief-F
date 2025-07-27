@@ -102,7 +102,6 @@ export default function UserViewDetails({ navigation, route }) {
 
       setError(errorMessage);
 
-      // Use fallback incident data if available
       if (fallbackIncident) {
         console.log("Using fallback incident data");
         setIncident(fallbackIncident);
@@ -121,7 +120,11 @@ export default function UserViewDetails({ navigation, route }) {
     }
   };
 
-  const progressPercentage = (donationData.raised / donationData.goal) * 100;
+  const progressPercentage =
+    incident?.donation?.collectedAmount && incident?.donation?.donationLimit
+      ? (incident.donation.collectedAmount / incident.donation.donationLimit) *
+        100
+      : 0;
 
   const handleDonate = async () => {
     if (!donationAmount || parseFloat(donationAmount) <= 0) {
@@ -130,26 +133,38 @@ export default function UserViewDetails({ navigation, route }) {
     }
 
     try {
-      // Use the actual incident ID for donation
-      const response = await api.post("/initialize-esewa", {
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) {
+        Alert.alert("Error", "User not logged in.");
+        return;
+      }
+
+      const payload = {
+        donationId: incident?.donation?.donationId || incident?.donationId,
         amount: parseFloat(donationAmount),
-        incidentId: incident?.incidentId || incident?.id,
-        // Add other required fields for eSewa
-      });
+        userId: parseInt(userId),
+        anonymous: false,
+      };
 
-      const result = response.data;
+      const response = await api.post("/donations/contribute", payload);
 
-      if (response.status === 200) {
-        Alert.alert("Success", "Donation initiated successfully");
+      if (response.status === 200 || response.status === 201) {
+        Alert.alert("Thank you!", "Donation successful.");
         setModalVisible(false);
         setDonationAmount("");
-        // Handle eSewa redirection or next steps
+
+        if (incidentId) {
+          fetchIncidentDetails();
+        }
       } else {
-        Alert.alert("Error", result.message || "Failed to initialize donation");
+        Alert.alert("Error", response.data.message || "Donation failed.");
       }
     } catch (error) {
-      Alert.alert("Error", "Network error. Please try again.");
       console.error("Donation error:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message || "Network error. Please try again."
+      );
     }
   };
 
@@ -266,8 +281,8 @@ export default function UserViewDetails({ navigation, route }) {
                 incident.urgencyLevel === "HIGH"
                   ? "#ff4444"
                   : incident.urgencyLevel === "MEDIUM"
-                    ? "#ffbb33"
-                    : "#00C851",
+                  ? "#ffbb33"
+                  : "#00C851",
             },
           ]}
         >
@@ -354,18 +369,20 @@ export default function UserViewDetails({ navigation, route }) {
         )}
 
         {/* Donate Button */}
-        <TouchableOpacity
-          style={styles.donateButton}
-          onPress={() => setModalVisible(true)}
-        >
-          <Ionicons
-            name="heart"
-            size={20}
-            color="#fff"
-            style={styles.donateIcon}
-          />
-          <Text style={styles.donateButtonText}>Donate Now</Text>
-        </TouchableOpacity>
+        {incident?.donation?.open && (
+          <TouchableOpacity
+            style={styles.donateButton}
+            onPress={() => setModalVisible(true)}
+          >
+            <Ionicons
+              name="heart"
+              size={20}
+              color="#fff"
+              style={styles.donateIcon}
+            />
+            <Text style={styles.donateButtonText}>Donate Now</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Donation Modal */}
@@ -395,10 +412,15 @@ export default function UserViewDetails({ navigation, route }) {
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
                   <Text style={styles.raisedAmount}>
-                    Rs. {donationData.raised.toLocaleString()} raised
+                    {/* Rs. {donationData.raised.toLocaleString()} raised */}
+                    Rs.{" "}
+                    {incident?.donation?.collectedAmount?.toLocaleString() ||
+                      "0"}{" "}
+                    raised
                   </Text>
                   <Text style={styles.goalAmount}>
-                    of Rs. {donationData.goal.toLocaleString()} goal
+                    of Rs. {incident?.donation?.donationLimit?.toLocaleString()}{" "}
+                    goal
                   </Text>
                 </View>
 
@@ -415,10 +437,6 @@ export default function UserViewDetails({ navigation, route }) {
                     {progressPercentage.toFixed(1)}%
                   </Text>
                 </View>
-
-                <Text style={styles.donorCount}>
-                  {donationData.donorCount} people have donated
-                </Text>
               </View>
 
               {/* Description */}
