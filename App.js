@@ -14,69 +14,74 @@ import { PaperProvider } from "react-native-paper";
 import { theme } from "./MyThemes.js";
 import { navigationRef } from "./utils/NavigationService.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import OrgBottomTabNavigator from "./components/Org/OrgBottomTabNavigator.jsx";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isOffline, setIsOffline] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     checkForPendingNotifications();
   }, []);
 
-   const checkForPendingNotifications = async () => {
+  const checkForPendingNotifications = async () => {
     try {
       // Check for initial notification (app was quit)
-      const initialNotification = await AsyncStorage.getItem('initialNotificationNavigation');
+      const initialNotification = await AsyncStorage.getItem(
+        "initialNotificationNavigation"
+      );
       if (initialNotification) {
         const { incidentId, timestamp } = JSON.parse(initialNotification);
-        
+
         // Only navigate if notification is recent (within 5 minutes)
         if (Date.now() - timestamp < 5 * 60 * 1000) {
           setTimeout(() => {
             if (navigationRef.isReady()) {
-              navigationRef.navigate('UserTabs', {
-                screen: 'Home',
+              navigationRef.navigate("UserTabs", {
+                screen: "Home",
                 params: {
-                  screen: 'UserViewDetails',
+                  screen: "UserViewDetails",
                   params: {
                     incidentId: incidentId,
-                    fromNotification: true
-                  }
-                }
+                    fromNotification: true,
+                  },
+                },
               });
             }
           }, 2000); // Wait for navigation to be fully ready
         }
-         await AsyncStorage.removeItem('initialNotificationNavigation');
+        await AsyncStorage.removeItem("initialNotificationNavigation");
       }
-         const pendingNotification = await AsyncStorage.getItem('pendingNotificationNavigation');
+      const pendingNotification = await AsyncStorage.getItem(
+        "pendingNotificationNavigation"
+      );
       if (pendingNotification) {
         const { incidentId, timestamp } = JSON.parse(pendingNotification);
-        
+
         // Only navigate if notification is recent
         if (Date.now() - timestamp < 5 * 60 * 1000) {
           setTimeout(() => {
             if (navigationRef.isReady()) {
-              navigationRef.navigate('UserTabs', {
-                screen: 'Home',
+              navigationRef.navigate("UserTabs", {
+                screen: "Home",
                 params: {
-                  screen: 'UserViewDetails',
+                  screen: "UserViewDetails",
                   params: {
                     incidentId: incidentId,
-                    fromNotification: true
-                  }
-                }
+                    fromNotification: true,
+                  },
+                },
               });
             }
           }, 1000);
         }
-        
+
         // Clear the stored notification
-        await AsyncStorage.removeItem('pendingNotificationNavigation');
+        await AsyncStorage.removeItem("pendingNotificationNavigation");
       }
     } catch (error) {
-      console.error('Error checking pending notifications:', error);
+      console.error("Error checking pending notifications:", error);
     }
   };
 
@@ -88,21 +93,19 @@ export default function App() {
 
   return (
     <PaperProvider theme={theme}>
-       <NavigationContainer ref={navigationRef}>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
-<Stack.Screen name="Login" component={LoginPage} /> 
-          <Stack.Screen name="Register" component={RegisterPage} /> 
+          <Stack.Screen name="Login" component={LoginPage} />
+          <Stack.Screen name="Register" component={RegisterPage} />
           {/* {userRole === "admin" ? ( */}
-            <Stack.Screen
-              name="AdminTabs"
-              component={AdminBottomTabNavigator}
-            />
+          <Stack.Screen name="AdminTabs" component={AdminBottomTabNavigator} />
           {/* ) : ( */}
-            <Stack.Screen name="UserTabs" component={UserBottomTabNavigator} />
+          <Stack.Screen name="UserTabs" component={UserBottomTabNavigator} />
           {/* )} */}
+          <Stack.Screen name="OrgTabs" component={OrgBottomTabNavigator} />
         </Stack.Navigator>
         <StatusBar style="auto" />
       </NavigationContainer>
